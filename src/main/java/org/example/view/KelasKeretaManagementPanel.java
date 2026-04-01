@@ -1,8 +1,8 @@
 package org.example.view;
 
 import com.formdev.flatlaf.FlatClientProperties;
-import org.example.dao.KeretaDAO;
-import org.example.model.Kereta;
+import org.example.dao.KelasKeretaDAO;
+import org.example.model.KelasKereta;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -10,14 +10,14 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.List;
 
-public class KeretaManagementPanel extends JPanel {
-    private final KeretaDAO keretaDAO;
+public class KelasKeretaManagementPanel extends JPanel {
+    private final KelasKeretaDAO kelasKeretaDAO;
     private JTable table;
     private DefaultTableModel tableModel;
     private JTextField txtSearch;
 
-    public KeretaManagementPanel() {
-        this.keretaDAO = new KeretaDAO();
+    public KelasKeretaManagementPanel() {
+        this.kelasKeretaDAO = new KelasKeretaDAO();
         initComponents();
         loadData();
     }
@@ -32,7 +32,7 @@ public class KeretaManagementPanel extends JPanel {
         headerPanel.setOpaque(false);
         headerPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
 
-        JLabel lblTitle = new JLabel("Kelola Data Kereta");
+        JLabel lblTitle = new JLabel("Kelola Data Kelas Kereta");
         lblTitle.setFont(new Font("Inter", Font.BOLD, 24));
         lblTitle.setForeground(Color.WHITE);
 
@@ -42,7 +42,7 @@ public class KeretaManagementPanel extends JPanel {
 
         txtSearch = new JTextField();
         txtSearch.setPreferredSize(new Dimension(250, 40));
-        txtSearch.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Cari Kode atau Nama...");
+        txtSearch.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Cari Nama Kelas...");
         txtSearch.putClientProperty(FlatClientProperties.STYLE, "arc: 15");
         txtSearch.addKeyListener(new java.awt.event.KeyAdapter() {
             @Override
@@ -51,7 +51,7 @@ public class KeretaManagementPanel extends JPanel {
             }
         });
 
-        JButton btnAdd = new JButton("Tambah Kereta");
+        JButton btnAdd = new JButton("Tambah Kelas");
         btnAdd.setFont(new Font("Inter", Font.BOLD, 14));
         btnAdd.setForeground(Color.WHITE);
         btnAdd.setBackground(new Color(51, 144, 255));
@@ -67,7 +67,7 @@ public class KeretaManagementPanel extends JPanel {
         headerPanel.add(actionPanel, BorderLayout.EAST);
 
         // Table Section
-        String[] columns = {"ID", "Kode Kereta", "Nama Kereta", "Tipe Kereta", "Tanggal Dibuat"};
+        String[] columns = {"ID", "Nama Kelas Kereta", "Harga Tambahan", "Tanggal Dibuat"};
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -110,8 +110,8 @@ public class KeretaManagementPanel extends JPanel {
             int row = table.getSelectedRow();
             if (row != -1) {
                 int id = (int) table.getValueAt(row, 0);
-                List<Kereta> all = keretaDAO.getAll();
-                Kereta selected = all.stream().filter(k -> k.getId() == id).findFirst().orElse(null);
+                List<KelasKereta> all = kelasKeretaDAO.getAll();
+                KelasKereta selected = all.stream().filter(k -> k.getId() == id).findFirst().orElse(null);
                 showForm(selected);
             } else {
                 JOptionPane.showMessageDialog(this, "Pilih data yang ingin diubah!", "Peringatan", JOptionPane.WARNING_MESSAGE);
@@ -135,13 +135,12 @@ public class KeretaManagementPanel extends JPanel {
 
     private void loadData() {
         tableModel.setRowCount(0);
-        List<Kereta> list = keretaDAO.getAll();
-        for (Kereta k : list) {
+        List<KelasKereta> list = kelasKeretaDAO.getAll();
+        for (KelasKereta k : list) {
             tableModel.addRow(new Object[]{
                 k.getId(),
-                k.getKodeKereta(),
-                k.getNamaKereta(),
-                k.getTipeKereta(),
+                k.getNamaKelasKereta(),
+                k.getHargaTambahan(),
                 k.getCreatedAt()
             });
         }
@@ -150,13 +149,12 @@ public class KeretaManagementPanel extends JPanel {
     private void searchData() {
         String keyword = txtSearch.getText();
         tableModel.setRowCount(0);
-        List<Kereta> list = keretaDAO.search(keyword);
-        for (Kereta k : list) {
+        List<KelasKereta> list = kelasKeretaDAO.search(keyword);
+        for (KelasKereta k : list) {
             tableModel.addRow(new Object[]{
                 k.getId(),
-                k.getKodeKereta(),
-                k.getNamaKereta(),
-                k.getTipeKereta(),
+                k.getNamaKelasKereta(),
+                k.getHargaTambahan(),
                 k.getCreatedAt()
             });
         }
@@ -168,7 +166,7 @@ public class KeretaManagementPanel extends JPanel {
             int id = (int) table.getValueAt(row, 0);
             int confirm = JOptionPane.showConfirmDialog(this, "Yakin ingin menghapus data ini?", "Konfirmasi Hapus", JOptionPane.YES_NO_OPTION);
             if (confirm == JOptionPane.YES_OPTION) {
-                if (keretaDAO.delete(id)) {
+                if (kelasKeretaDAO.delete(id)) {
                     loadData();
                     JOptionPane.showMessageDialog(this, "Data berhasil dihapus!");
                 }
@@ -176,56 +174,60 @@ public class KeretaManagementPanel extends JPanel {
         }
     }
 
-    private void showForm(Kereta kereta) {
+    private void showForm(KelasKereta kelasKereta) {
         JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), 
-            kereta == null ? "Tambah Kereta" : "Edit Kereta", true);
+            kelasKereta == null ? "Tambah Kelas Kereta" : "Edit Kelas Kereta", true);
         dialog.setLayout(new BorderLayout());
-        dialog.setSize(400, 450);
+        dialog.setSize(400, 400);
         dialog.setLocationRelativeTo(this);
 
         JPanel panel = new JPanel(new GridLayout(0, 1, 10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
 
-        JTextField fKode = new JTextField();
-        fKode.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Contoh: ARGO-001");
         JTextField fNama = new JTextField();
-        fNama.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Contoh: Argo Bromo Anggrek");
-        
-        String[] tipeList = {"Eksekutif", "Bisnis", "Ekonomi", "Luxury"};
-        JComboBox<String> fTipe = new JComboBox<>(tipeList);
+        fNama.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Contoh: Eksekutif");
+        JTextField fHarga = new JTextField();
+        fHarga.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Contoh: 50000");
 
-        if (kereta != null) {
-            fKode.setText(kereta.getKodeKereta());
-            fNama.setText(kereta.getNamaKereta());
-            fTipe.setSelectedItem(kereta.getTipeKereta());
+        if (kelasKereta != null) {
+            fNama.setText(kelasKereta.getNamaKelasKereta());
+            fHarga.setText(String.valueOf(kelasKereta.getHargaTambahan()));
         }
 
-        panel.add(new JLabel("Kode Kereta:"));
-        panel.add(fKode);
-        panel.add(new JLabel("Nama Kereta:"));
+        panel.add(new JLabel("Nama Kelas Kereta:"));
         panel.add(fNama);
-        panel.add(new JLabel("Tipe Kereta:"));
-        panel.add(fTipe);
+        panel.add(new JLabel("Harga Tambahan (Rp):"));
+        panel.add(fHarga);
 
         JButton btnSave = new JButton("Simpan");
         btnSave.setBackground(new Color(51, 144, 255));
         btnSave.setForeground(Color.WHITE);
         btnSave.addActionListener(e -> {
-            if (fKode.getText().isEmpty() || fNama.getText().isEmpty()) {
-                JOptionPane.showMessageDialog(dialog, "Mohon isi semua field!");
-                return;
-            }
+            try {
+                String nama = fNama.getText().trim();
+                String hargaText = fHarga.getText().trim();
 
-            Kereta k = (kereta == null) ? new Kereta() : kereta;
-            k.setKodeKereta(fKode.getText());
-            k.setNamaKereta(fNama.getText());
-            k.setTipeKereta((String) fTipe.getSelectedItem());
+                if (nama.isEmpty() || hargaText.isEmpty()) {
+                    JOptionPane.showMessageDialog(dialog, "Mohon isi semua field!");
+                    return;
+                }
 
-            boolean success = (kereta == null) ? keretaDAO.insert(k) : keretaDAO.update(k);
-            if (success) {
-                loadData();
-                dialog.dispose();
-                JOptionPane.showMessageDialog(this, "Data berhasil disimpan!");
+                int harga = Integer.parseInt(hargaText);
+
+                KelasKereta k = (kelasKereta == null) ? new KelasKereta() : kelasKereta;
+                k.setNamaKelasKereta(nama);
+                k.setHargaTambahan(harga);
+
+                boolean success = (kelasKereta == null) ? kelasKeretaDAO.insert(k) : kelasKeretaDAO.update(k);
+                if (success) {
+                    loadData();
+                    dialog.dispose();
+                    JOptionPane.showMessageDialog(this, "Data berhasil disimpan!");
+                } else {
+                    JOptionPane.showMessageDialog(dialog, "Gagal menyimpan data ke database.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(dialog, "Harga Tambahan harus berupa angka!", "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
 
