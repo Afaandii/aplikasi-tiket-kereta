@@ -5,6 +5,7 @@ import org.example.dao.RoleDAO;
 import org.example.dao.UserDAO;
 import org.example.model.Role;
 import org.example.model.User;
+import org.example.utils.PasswordUtil;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -84,6 +85,8 @@ public class UserManagementPanel extends JPanel {
         table.setFont(new Font("Inter", Font.PLAIN, 14));
         table.getTableHeader().setFont(new Font("Inter", Font.BOLD, 14));
         table.getTableHeader().setReorderingAllowed(false);
+        table.setShowGrid(true);
+        table.setGridColor(new Color(60, 60, 60));
         
         table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
             @Override
@@ -226,20 +229,33 @@ public class UserManagementPanel extends JPanel {
         btnSave.setBackground(new Color(51, 144, 255));
         btnSave.setForeground(Color.WHITE);
         btnSave.addActionListener(e -> {
-            if (fUsername.getText().isEmpty() || fEmail.getText().isEmpty()) {
+            String username = fUsername.getText().trim();
+            String email = fEmail.getText().trim();
+            String pass = new String(fPassword.getPassword());
+
+            if (username.isEmpty() || email.isEmpty()) {
                 JOptionPane.showMessageDialog(dialog, "Mohon isi semua field!");
                 return;
             }
 
             User u = (user == null) ? new User() : user;
-            u.setUsername(fUsername.getText());
-            u.setEmail(fEmail.getText());
+            u.setUsername(username);
+            u.setEmail(email);
             u.setRoleId(((Role)cbRole.getSelectedItem()).getId());
             
-            // Only update password if changed from dummy
-            String pass = new String(fPassword.getPassword());
-            if (!pass.equals("********")) {
-                u.setPassword(pass);
+            // Password logic
+            if (user == null) {
+                // New User: Password MUST be filled
+                if (pass.isEmpty()) {
+                    JOptionPane.showMessageDialog(dialog, "Password tidak boleh kosong untuk user baru!");
+                    return;
+                }
+                u.setPassword(PasswordUtil.hash(pass));
+            } else {
+                // Edit User: Only update if changed from dummy
+                if (!pass.equals("********") && !pass.isEmpty()) {
+                    u.setPassword(PasswordUtil.hash(pass));
+                }
             }
 
             boolean success = (user == null) ? userDAO.insert(u) : userDAO.update(u);
@@ -247,6 +263,8 @@ public class UserManagementPanel extends JPanel {
                 loadData();
                 dialog.dispose();
                 JOptionPane.showMessageDialog(this, "User berhasil disimpan!");
+            } else {
+                JOptionPane.showMessageDialog(dialog, "Gagal menyimpan data user. Periksa kembali input atau koneksi database.", "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
 
