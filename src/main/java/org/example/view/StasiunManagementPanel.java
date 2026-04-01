@@ -142,7 +142,7 @@ public class StasiunManagementPanel extends JPanel {
                 s.getKodeStasiun(),
                 s.getNamaStasiun(),
                 s.getKota(),
-                s.getUpdatedAt() != null ? s.getUpdatedAt() : s.getCreatedAt()
+                s.getCreatedAt()
             });
         }
     }
@@ -157,7 +157,7 @@ public class StasiunManagementPanel extends JPanel {
                 s.getKodeStasiun(),
                 s.getNamaStasiun(),
                 s.getKota(),
-                s.getUpdatedAt() != null ? s.getUpdatedAt() : s.getCreatedAt()
+                s.getCreatedAt()
             });
         }
     }

@@ -37,6 +37,7 @@ public class DashboardAdmin extends JFrame {
         mainContent.add(createOverviewPanel(), "Overview");
         mainContent.add(new StasiunManagementPanel(), "Stasiun");
         mainContent.add(new KeretaManagementPanel(), "Kereta");
+        mainContent.add(new KelasKeretaManagementPanel(), "KelasKereta");
         mainContent.add(new GerbongManagementPanel(), "Gerbong");
         mainContent.add(new JadwalManagementPanel(), "Jadwal");
         mainContent.add(new UserManagementPanel(), "User");
@@ -73,6 +74,7 @@ public class DashboardAdmin extends JFrame {
         menuPanel.add(createMenuButton("Dashboard", "Overview"));
         menuPanel.add(createMenuButton("Stasiun", "Stasiun"));
         menuPanel.add(createMenuButton("Kereta", "Kereta"));
+        menuPanel.add(createMenuButton("Kelas Kereta", "KelasKereta"));
         menuPanel.add(createMenuButton("Gerbong & Kursi", "Gerbong"));
         menuPanel.add(createMenuButton("Jadwal", "Jadwal"));
         menuPanel.add(createMenuButton("Users", "User"));

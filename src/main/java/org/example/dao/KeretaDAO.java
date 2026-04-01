@@ -11,7 +11,7 @@ public class KeretaDAO {
 
     public List<Kereta> getAll() {
         List<Kereta> list = new ArrayList<>();
-        String sql = "SELECT * FROM kereta ORDER BY id DESC";
+        String sql = "SELECT * FROM kereta ORDER BY id ASC";
         try (Connection conn = Database.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
@@ -33,7 +33,7 @@ public class KeretaDAO {
     }
 
     public boolean insert(Kereta k) {
-        String sql = "INSERT INTO kereta (kode_kereta, nama_kereta, tipe_kereta) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO kereta (kode_kereta, nama_kereta, tipe_kereta, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW())";
         try (Connection conn = Database.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
@@ -48,7 +48,7 @@ public class KeretaDAO {
     }
 
     public boolean update(Kereta k) {
-        String sql = "UPDATE kereta SET kode_kereta = ?, nama_kereta = ?, tipe_kereta = ? WHERE id = ?";
+        String sql = "UPDATE kereta SET kode_kereta = ?, nama_kereta = ?, tipe_kereta = ?, updated_at = NOW() WHERE id = ?";
         try (Connection conn = Database.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
