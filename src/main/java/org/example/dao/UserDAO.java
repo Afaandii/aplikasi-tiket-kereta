@@ -2,6 +2,7 @@ package org.example.dao;
 
 import org.example.model.User;
 import org.example.utils.Database;
+import org.example.utils.PasswordUtil;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -9,20 +10,36 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class UserDAO {
-    private final Connection connection;
-
-    public UserDAO() {
-        this.connection = Database.getConnection();
-    }
 
     public User login(String username, String password) {
-        String sql = "SELECT * FROM user WHERE username = ? AND password = ?";
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+        String sql = "SELECT * FROM user WHERE username = ?";
+        try (Connection conn = Database.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, username);
-            pstmt.setString(2, password);
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
-                    return mapResultSetToUser(rs);
+                    String storedPassword = rs.getString("password");
+                    boolean passwordMatches = false;
+                    boolean needsUpgrade = false;
+
+                    if (storedPassword != null && storedPassword.startsWith("$2a$")) {
+                        // Standard BCrypt check
+                        passwordMatches = PasswordUtil.check(password, storedPassword);
+                    } else {
+                        // Legacy plain-text check
+                        passwordMatches = password.equals(storedPassword);
+                        needsUpgrade = passwordMatches;
+                    }
+
+                    if (passwordMatches) {
+                        User user = mapResultSetToUser(rs);
+                        if (needsUpgrade) {
+                            // Automatically upgrade to hashed password
+                            String newHash = PasswordUtil.hash(password);
+                            updatePassword(user.getId(), newHash);
+                        }
+                        return user;
+                    }
                 }
             }
         } catch (SQLException e) {
@@ -31,10 +48,24 @@ public class UserDAO {
         return null;
     }
 
+    private void updatePassword(int userId, String newHash) {
+        String sql = "UPDATE user SET password = ? WHERE id = ?";
+        try (Connection conn = Database.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, newHash);
+            pstmt.setInt(2, userId);
+            pstmt.executeUpdate();
+            System.out.println("Password for user ID " + userId + " has been upgraded to BCrypt hash.");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     public java.util.List<User> getAll() {
         java.util.List<User> list = new java.util.ArrayList<>();
-        String sql = "SELECT u.*, r.name as role_name FROM user u JOIN role r ON u.role_id = r.id ORDER BY u.id DESC";
-        try (PreparedStatement pstmt = connection.prepareStatement(sql);
+        String sql = "SELECT u.*, r.nama_role as role_name FROM user u JOIN role r ON u.role_id = r.id ORDER BY u.id ASC";
+        try (Connection conn = Database.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
              ResultSet rs = pstmt.executeQuery()) {
             while (rs.next()) {
                 User u = mapResultSetToUser(rs);
@@ -48,8 +79,9 @@ public class UserDAO {
     }
 
     public boolean insert(User u) {
-        String sql = "INSERT INTO user (role_id, username, email, password) VALUES (?, ?, ?, ?)";
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+        String sql = "INSERT INTO user (role_id, username, email, password, created_at, updated_at) VALUES (?, ?, ?, ?, NOW(), NOW())";
+        try (Connection conn = Database.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, u.getRoleId());
             pstmt.setString(2, u.getUsername());
             pstmt.setString(3, u.getEmail());
@@ -62,8 +94,9 @@ public class UserDAO {
     }
 
     public boolean update(User u) {
-        String sql = "UPDATE user SET role_id = ?, username = ?, email = ?, password = ? WHERE id = ?";
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+        String sql = "UPDATE user SET role_id = ?, username = ?, email = ?, password = ?, updated_at = NOW() WHERE id = ?";
+        try (Connection conn = Database.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, u.getRoleId());
             pstmt.setString(2, u.getUsername());
             pstmt.setString(3, u.getEmail());
@@ -78,7 +111,8 @@ public class UserDAO {
 
     public boolean delete(int id) {
         String sql = "DELETE FROM user WHERE id = ?";
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+        try (Connection conn = Database.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, id);
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -89,9 +123,10 @@ public class UserDAO {
 
     public java.util.List<User> search(String keyword) {
         java.util.List<User> list = new java.util.ArrayList<>();
-        String sql = "SELECT u.*, r.name as role_name FROM user u JOIN role r ON u.role_id = r.id " +
-                     "WHERE u.username LIKE ? OR u.email LIKE ? ORDER BY u.id DESC";
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+        String sql = "SELECT u.*, r.nama_role as role_name FROM user u JOIN role r ON u.role_id = r.id " +
+                     "WHERE u.username LIKE ? OR u.email LIKE ? ORDER BY u.id ASC";
+        try (Connection conn = Database.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             String term = "%" + keyword + "%";
             pstmt.setString(1, term);
             pstmt.setString(2, term);
