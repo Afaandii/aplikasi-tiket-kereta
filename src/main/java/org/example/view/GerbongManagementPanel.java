@@ -6,11 +6,11 @@ import org.example.dao.KelasKeretaDAO;
 import org.example.dao.KeretaDAO;
 import org.example.dao.KursiDAO;
 import org.example.model.Gerbong;
+import org.example.model.KelasKereta;
 import org.example.model.Kereta;
 import org.example.model.Kursi;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.List;
@@ -50,35 +50,41 @@ public class GerbongManagementPanel extends JPanel {
         // TOP: GERBONG MANAGEMENT
         JPanel pnlGerbong = new JPanel(new BorderLayout());
         pnlGerbong.setOpaque(false);
-        
+
         JPanel pnlHeaderGerbong = new JPanel(new BorderLayout());
         pnlHeaderGerbong.setOpaque(false);
         pnlHeaderGerbong.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
-        
+
         JLabel lblTitle = new JLabel("Daftar Gerbong");
         lblTitle.setFont(new Font("Inter", Font.BOLD, 18));
         lblTitle.setForeground(Color.WHITE);
-        
+
         JButton btnAdd = new JButton("Tambah Gerbong");
         btnAdd.setBackground(new Color(51, 144, 255));
         btnAdd.setForeground(Color.WHITE);
         btnAdd.putClientProperty(FlatClientProperties.STYLE, "arc: 15");
         btnAdd.addActionListener(e -> showForm(null));
-        
+
         pnlHeaderGerbong.add(lblTitle, BorderLayout.WEST);
         pnlHeaderGerbong.add(btnAdd, BorderLayout.EAST);
 
-        String[] colsG = {"ID", "Nama Gerbong", "Kereta", "Kelas"};
-        modelGerbong = new DefaultTableModel(colsG, 0) { @Override public boolean isCellEditable(int r, int c) { return false; } };
+        String[] colsG = { "ID", "Nama Gerbong", "Kereta", "Kelas" };
+        modelGerbong = new DefaultTableModel(colsG, 0) {
+            @Override
+            public boolean isCellEditable(int r, int c) {
+                return false;
+            }
+        };
         tableGerbong = new JTable(modelGerbong);
         tableGerbong.setRowHeight(40);
         tableGerbong.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) loadKursi();
+            if (!e.getValueIsAdjusting())
+                loadKursi();
         });
 
         JScrollPane spG = new JScrollPane(tableGerbong);
         spG.putClientProperty(FlatClientProperties.STYLE, "arc: 15; border: 0,0,0,0");
-        
+
         pnlGerbong.add(pnlHeaderGerbong, BorderLayout.NORTH);
         pnlGerbong.add(spG, BorderLayout.CENTER);
 
@@ -90,12 +96,17 @@ public class GerbongManagementPanel extends JPanel {
         lblKursiTitle = new JLabel("Pilih Gerbong untuk melihat kursi");
         lblKursiTitle.setFont(new Font("Inter", Font.BOLD, 16));
         lblKursiTitle.setForeground(new Color(180, 180, 180));
-        
-        String[] colsK = {"ID", "Nomor Kursi"};
-        modelKursi = new DefaultTableModel(colsK, 0) { @Override public boolean isCellEditable(int r, int c) { return false; } };
+
+        String[] colsK = { "ID", "Nomor Kursi" };
+        modelKursi = new DefaultTableModel(colsK, 0) {
+            @Override
+            public boolean isCellEditable(int r, int c) {
+                return false;
+            }
+        };
         tableKursi = new JTable(modelKursi);
         tableKursi.setRowHeight(35);
-        
+
         JScrollPane spK = new JScrollPane(tableKursi);
         spK.putClientProperty(FlatClientProperties.STYLE, "arc: 15; border: 0,0,0,0");
 
@@ -110,13 +121,13 @@ public class GerbongManagementPanel extends JPanel {
         // Sidebar for Actions
         JPanel pnlActions = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         pnlActions.setOpaque(false);
-        
+
         JButton btnDelete = new JButton("Hapus Gerbong");
         btnDelete.setBackground(new Color(244, 67, 54));
         btnDelete.setForeground(Color.WHITE);
         btnDelete.putClientProperty(FlatClientProperties.STYLE, "arc: 15");
         btnDelete.addActionListener(e -> deleteGerbong());
-        
+
         pnlActions.add(btnDelete);
         add(pnlActions, BorderLayout.SOUTH);
     }
@@ -125,7 +136,13 @@ public class GerbongManagementPanel extends JPanel {
         modelGerbong.setRowCount(0);
         List<Gerbong> list = gerbongDAO.getAll();
         for (Gerbong g : list) {
-            modelGerbong.addRow(new Object[]{g.getId(), g.getNamaGerbong(), g.getNamaKereta(), g.getNamaKelas()});
+            modelGerbong.addRow(new Object[] {
+                    g.getId(),
+                    g.getNamaGerbong(),
+                    g.getNamaKereta(),
+                    g.getNamaKelas(),
+                    g.getCreatedAt()
+            });
         }
     }
 
@@ -136,11 +153,11 @@ public class GerbongManagementPanel extends JPanel {
             String name = (String) tableGerbong.getValueAt(row, 1);
             lblKursiTitle.setText("Kursi di " + name);
             lblKursiTitle.setForeground(Color.WHITE);
-            
+
             modelKursi.setRowCount(0);
             List<Kursi> list = kursiDAO.getByGerbongId(gId);
             for (Kursi k : list) {
-                modelKursi.addRow(new Object[]{k.getId(), "Kursi #" + k.getNomorKursi()});
+                modelKursi.addRow(new Object[] { k.getId(), "Kursi" + k.getNomorKursi() });
             }
         } else {
             lblKursiTitle.setText("Pilih Gerbong untuk melihat kursi");
@@ -152,7 +169,8 @@ public class GerbongManagementPanel extends JPanel {
         int row = tableGerbong.getSelectedRow();
         if (row != -1) {
             int id = (int) tableGerbong.getValueAt(row, 0);
-            int confirm = JOptionPane.showConfirmDialog(this, "Hapus gerbong ini beserta semua kursinya?", "Konfirmasi", JOptionPane.YES_NO_OPTION);
+            int confirm = JOptionPane.showConfirmDialog(this, "Hapus gerbong ini beserta semua kursinya?", "Konfirmasi",
+                    JOptionPane.YES_NO_OPTION);
             if (confirm == JOptionPane.YES_OPTION) {
                 kursiDAO.deleteByGerbongId(id);
                 gerbongDAO.delete(id);
@@ -175,13 +193,13 @@ public class GerbongManagementPanel extends JPanel {
         JComboBox<ComboItem> cbKereta = new JComboBox<>();
         keretas.forEach(k -> cbKereta.addItem(new ComboItem(k.getId(), k.getNamaKereta())));
 
-        List<KelasKeretaDAO.Kelas> kelass = kelasDAO.getAll();
+        List<KelasKereta> kelass = kelasDAO.getAll();
         JComboBox<ComboItem> cbKelas = new JComboBox<>();
-        kelass.forEach(k -> cbKelas.addItem(new ComboItem(k.id, k.namaKelas)));
+        kelass.forEach(k -> cbKelas.addItem(new ComboItem(k.getId(), k.getNamaKelasKereta())));
 
         JTextField fNama = new JTextField();
         fNama.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Contoh: Eksekutif 1");
-        
+
         JTextField fKapasitas = new JTextField();
         fKapasitas.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Jumlah Kursi (Misal: 50)");
 
@@ -199,11 +217,12 @@ public class GerbongManagementPanel extends JPanel {
         btnSave.setForeground(Color.WHITE);
         btnSave.addActionListener(e -> {
             try {
-                if (fNama.getText().isEmpty() || fKapasitas.getText().isEmpty()) throw new Exception("Data tidak lengkap!");
-                
+                if (fNama.getText().isEmpty() || fKapasitas.getText().isEmpty())
+                    throw new Exception("Data tidak lengkap!");
+
                 Gerbong newG = new Gerbong();
-                newG.setKeretaId(((ComboItem)cbKereta.getSelectedItem()).id);
-                newG.setKelasKeretaId(((ComboItem)cbKelas.getSelectedItem()).id);
+                newG.setKeretaId(((ComboItem) cbKereta.getSelectedItem()).id);
+                newG.setKelasKeretaId(((ComboItem) cbKelas.getSelectedItem()).id);
                 newG.setNamaGerbong(fNama.getText());
 
                 int newId = gerbongDAO.insert(newG);
@@ -225,8 +244,17 @@ public class GerbongManagementPanel extends JPanel {
     }
 
     private static class ComboItem {
-        int id; String name;
-        ComboItem(int id, String name) { this.id = id; this.name = name; }
-        @Override public String toString() { return name; }
+        int id;
+        String name;
+
+        ComboItem(int id, String name) {
+            this.id = id;
+            this.name = name;
+        }
+
+        @Override
+        public String toString() {
+            return name;
+        }
     }
 }
