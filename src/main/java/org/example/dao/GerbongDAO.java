@@ -11,11 +11,11 @@ public class GerbongDAO {
 
     public List<Gerbong> getAll() {
         List<Gerbong> list = new ArrayList<>();
-        String sql = "SELECT g.*, k.nama_kereta, kk.nama_kelas " +
+        String sql = "SELECT g.*, k.nama_kereta, kk.nama_kelas_kereta as nama_kelas " +
                      "FROM gerbong g " +
                      "JOIN kereta k ON g.kereta_id = k.id " +
                      "JOIN kelas_kereta kk ON g.kelas_kereta_id = kk.id " +
-                     "ORDER BY g.id DESC";
+                     "ORDER BY g.id ASC";
 
         try (Connection conn = Database.getConnection();
              Statement stmt = conn.createStatement();
@@ -40,7 +40,7 @@ public class GerbongDAO {
     }
 
     public int insert(Gerbong g) {
-        String sql = "INSERT INTO gerbong (kereta_id, kelas_kereta_id, nama_gerbong) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO gerbong (kereta_id, kelas_kereta_id, nama_gerbong, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW())";
         try (Connection conn = Database.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
@@ -63,7 +63,7 @@ public class GerbongDAO {
     }
 
     public boolean update(Gerbong g) {
-        String sql = "UPDATE gerbong SET kereta_id = ?, kelas_kereta_id = ?, nama_gerbong = ? WHERE id = ?";
+        String sql = "UPDATE gerbong SET kereta_id = ?, kelas_kereta_id = ?, nama_gerbong = ?, updated_at = NOW() WHERE id = ?";
         try (Connection conn = Database.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 

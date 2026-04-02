@@ -78,7 +78,7 @@ public class JadwalManagementPanel extends JPanel {
         headerPanel.add(actionPanel, BorderLayout.EAST);
 
         // Table Section
-        String[] columns = {"ID", "Kereta", "Asal", "Tujuan", "Harga", "Berangkat", "Tiba", "Status"};
+        String[] columns = { "ID", "Kereta", "Asal", "Tujuan", "Harga", "Berangkat", "Tiba", "Status" };
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -91,10 +91,11 @@ public class JadwalManagementPanel extends JPanel {
         table.setFont(new Font("Inter", Font.PLAIN, 14));
         table.getTableHeader().setFont(new Font("Inter", Font.BOLD, 14));
         table.getTableHeader().setReorderingAllowed(false);
-        
+
         table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
             @Override
-            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
+                    boolean hasFocus, int row, int column) {
                 Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
                 if (c instanceof JLabel) {
                     ((JLabel) c).setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15));
@@ -124,7 +125,8 @@ public class JadwalManagementPanel extends JPanel {
                 Jadwal selected = all.stream().filter(j -> j.getId() == id).findFirst().orElse(null);
                 showForm(selected);
             } else {
-                JOptionPane.showMessageDialog(this, "Pilih jadwal yang ingin diubah!", "Peringatan", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Pilih jadwal yang ingin diubah!", "Peringatan",
+                        JOptionPane.WARNING_MESSAGE);
             }
         });
 
@@ -147,15 +149,15 @@ public class JadwalManagementPanel extends JPanel {
         tableModel.setRowCount(0);
         List<Jadwal> list = jadwalDAO.getAll();
         for (Jadwal j : list) {
-            tableModel.addRow(new Object[]{
-                j.getId(),
-                j.getNamaKereta(),
-                j.getNamaStasiunAwal(),
-                j.getNamaStasiunTujuan(),
-                "Rp " + String.format("%,d", j.getHargaTiket()),
-                dateFormat.format(j.getWaktuBerangkat()),
-                dateFormat.format(j.getWaktuTiba()),
-                j.getStatus()
+            tableModel.addRow(new Object[] {
+                    j.getId(),
+                    j.getNamaKereta(),
+                    j.getNamaStasiunAwal(),
+                    j.getNamaStasiunTujuan(),
+                    "Rp " + String.format("%,d", j.getHargaTiket()),
+                    dateFormat.format(j.getWaktuBerangkat()),
+                    dateFormat.format(j.getWaktuTiba()),
+                    j.getStatus()
             });
         }
     }
@@ -165,15 +167,15 @@ public class JadwalManagementPanel extends JPanel {
         tableModel.setRowCount(0);
         List<Jadwal> list = jadwalDAO.search(keyword);
         for (Jadwal j : list) {
-            tableModel.addRow(new Object[]{
-                j.getId(),
-                j.getNamaKereta(),
-                j.getNamaStasiunAwal(),
-                j.getNamaStasiunTujuan(),
-                "Rp " + String.format("%,d", j.getHargaTiket()),
-                dateFormat.format(j.getWaktuBerangkat()),
-                dateFormat.format(j.getWaktuTiba()),
-                j.getStatus()
+            tableModel.addRow(new Object[] {
+                    j.getId(),
+                    j.getNamaKereta(),
+                    j.getNamaStasiunAwal(),
+                    j.getNamaStasiunTujuan(),
+                    "Rp " + String.format("%,d", j.getHargaTiket()),
+                    dateFormat.format(j.getWaktuBerangkat()),
+                    dateFormat.format(j.getWaktuTiba()),
+                    j.getStatus()
             });
         }
     }
@@ -182,7 +184,8 @@ public class JadwalManagementPanel extends JPanel {
         int row = table.getSelectedRow();
         if (row != -1) {
             int id = (int) table.getValueAt(row, 0);
-            int confirm = JOptionPane.showConfirmDialog(this, "Yakin ingin menghapus jadwal ini?", "Konfirmasi Hapus", JOptionPane.YES_NO_OPTION);
+            int confirm = JOptionPane.showConfirmDialog(this, "Yakin ingin menghapus jadwal ini?", "Konfirmasi Hapus",
+                    JOptionPane.YES_NO_OPTION);
             if (confirm == JOptionPane.YES_OPTION) {
                 if (jadwalDAO.delete(id)) {
                     loadData();
@@ -190,13 +193,14 @@ public class JadwalManagementPanel extends JPanel {
                 }
             }
         } else {
-            JOptionPane.showMessageDialog(this, "Pilih data yang ingin dihapus!", "Peringatan", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Pilih data yang ingin dihapus!", "Peringatan",
+                    JOptionPane.WARNING_MESSAGE);
         }
     }
 
     private void showForm(Jadwal jadwal) {
-        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), 
-            jadwal == null ? "Tambah Jadwal" : "Edit Jadwal", true);
+        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this),
+                jadwal == null ? "Tambah Jadwal" : "Edit Jadwal", true);
         dialog.setLayout(new BorderLayout());
         dialog.setSize(500, 600);
         dialog.setLocationRelativeTo(this);
@@ -232,7 +236,7 @@ public class JadwalManagementPanel extends JPanel {
         sTiba.setEditor(editorTiba);
         sTiba.putClientProperty(FlatClientProperties.STYLE, "arc: 15");
 
-        JComboBox<String> cbStatus = new JComboBox<>(new String[]{"Tersedia", "Penuh", "Berangkat", "Selesai", "Dibatalkan"});
+        JComboBox<String> cbStatus = new JComboBox<>(new String[] { "Aktif", "Selesai", "Dibatalkan", "Delay" });
 
         if (jadwal != null) {
             setSelectedId(cbKereta, jadwal.getKeretaId());
@@ -271,15 +275,15 @@ public class JadwalManagementPanel extends JPanel {
                 }
 
                 Jadwal j = (jadwal == null) ? new Jadwal() : jadwal;
-                j.setKeretaId(((Item)cbKereta.getSelectedItem()).id);
-                j.setStasiunAwalId(((Item)cbAsal.getSelectedItem()).id);
-                j.setStasiunTujuanId(((Item)cbTujuan.getSelectedItem()).id);
+                j.setKeretaId(((Item) cbKereta.getSelectedItem()).id);
+                j.setStasiunAwalId(((Item) cbAsal.getSelectedItem()).id);
+                j.setStasiunTujuanId(((Item) cbTujuan.getSelectedItem()).id);
                 j.setHargaTiket(Integer.parseInt(fHarga.getText()));
-                
+
                 // Get Date from Spinner
                 java.util.Date dBerangkat = (java.util.Date) sBerangkat.getValue();
                 java.util.Date dTiba = (java.util.Date) sTiba.getValue();
-                
+
                 j.setWaktuBerangkat(new Timestamp(dBerangkat.getTime()));
                 j.setWaktuTiba(new Timestamp(dTiba.getTime()));
                 j.setStatus(cbStatus.getSelectedItem().toString());
@@ -291,7 +295,8 @@ public class JadwalManagementPanel extends JPanel {
                     JOptionPane.showMessageDialog(this, "Jadwal Berhasil Disimpan!");
                 }
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(dialog, "Error: " + ex.getMessage(), "Input Salah", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(dialog, "Error: " + ex.getMessage(), "Input Salah",
+                        JOptionPane.ERROR_MESSAGE);
             }
         });
 
@@ -304,9 +309,16 @@ public class JadwalManagementPanel extends JPanel {
     private static class Item {
         int id;
         String name;
-        Item(int id, String name) { this.id = id; this.name = name; }
+
+        Item(int id, String name) {
+            this.id = id;
+            this.name = name;
+        }
+
         @Override
-        public String toString() { return name; }
+        public String toString() {
+            return name;
+        }
     }
 
     private void setSelectedId(JComboBox<Item> cb, int id) {
