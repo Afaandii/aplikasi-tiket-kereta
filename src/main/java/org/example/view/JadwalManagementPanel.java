@@ -1,332 +1,449 @@
 package org.example.view;
 
 import com.formdev.flatlaf.FlatClientProperties;
-import org.example.dao.JadwalDAO;
-import org.example.dao.KeretaDAO;
-import org.example.dao.StasiunDAO;
-import org.example.model.Jadwal;
-import org.example.model.Kereta;
-import org.example.model.Stasiun;
+import org.example.dao.*;
+import org.example.model.*;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
-import java.util.List;
 
 public class JadwalManagementPanel extends JPanel {
     private final JadwalDAO jadwalDAO;
+    private final JadwalHargaDAO hargaDAO;
+    private final JadwalKursiDAO kursiDAO;
     private final KeretaDAO keretaDAO;
     private final StasiunDAO stasiunDAO;
-    private JTable table;
-    private DefaultTableModel tableModel;
-    private JTextField txtSearch;
-    private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+    private final KelasKeretaDAO kelasDAO;
+
+    private JTable tblJadwal;
+    private DefaultTableModel modelJadwal;
+    private JTextField txtSearchJadwal;
+
+    private JTable tblHarga;
+    private DefaultTableModel modelHarga;
+    private JLabel lblHargaTitle;
+
+    private JTable tblKursi;
+    private DefaultTableModel modelKursi;
+    private JLabel lblKursiTitle;
 
     public JadwalManagementPanel() {
         this.jadwalDAO = new JadwalDAO();
+        this.hargaDAO = new JadwalHargaDAO();
+        this.kursiDAO = new JadwalKursiDAO();
         this.keretaDAO = new KeretaDAO();
         this.stasiunDAO = new StasiunDAO();
+        this.kelasDAO = new KelasKeretaDAO();
+
         initComponents();
-        loadData();
+        loadJadwal();
     }
 
     private void initComponents() {
         setLayout(new BorderLayout());
         setOpaque(false);
-        setBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30));
 
-        // Header Section
-        JPanel headerPanel = new JPanel(new BorderLayout());
-        headerPanel.setOpaque(false);
-        headerPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
+        JTabbedPane tabbedPane = new JTabbedPane();
+        tabbedPane.putClientProperty(FlatClientProperties.STYLE, "tabType:card; arc: 20");
 
-        JLabel lblTitle = new JLabel("Kelola Jadwal Keberangkatan");
-        lblTitle.setFont(new Font("Inter", Font.BOLD, 24));
-        lblTitle.setForeground(Color.WHITE);
+        tabbedPane.addTab("Kelola Jadwal", createJadwalPanel());
+        tabbedPane.addTab("Jadwal Harga", createHargaPanel());
+        tabbedPane.addTab("Jadwal Kursi", createKursiPanel());
 
-        // Search & Add Button
-        JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
-        actionPanel.setOpaque(false);
+        add(tabbedPane, BorderLayout.CENTER);
+    }
 
-        txtSearch = new JTextField();
-        txtSearch.setPreferredSize(new Dimension(280, 40));
-        txtSearch.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Cari Kereta atau Stasiun...");
-        txtSearch.putClientProperty(FlatClientProperties.STYLE, "arc: 15");
-        txtSearch.addKeyListener(new java.awt.event.KeyAdapter() {
-            @Override
+    // --- JADWAL TAB ---
+    private JPanel createJadwalPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setOpaque(false);
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        // Header
+        JPanel header = new JPanel(new BorderLayout());
+        header.setOpaque(false);
+        header.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
+
+        JLabel title = new JLabel("Kelola Jadwal Keberangkatan");
+        title.setFont(new Font("Inter", Font.BOLD, 20));
+        title.setForeground(Color.WHITE);
+
+        JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        actions.setOpaque(false);
+
+        txtSearchJadwal = new JTextField();
+        txtSearchJadwal.setPreferredSize(new Dimension(200, 35));
+        txtSearchJadwal.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Cari...");
+        txtSearchJadwal.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyReleased(java.awt.event.KeyEvent e) {
-                searchData();
+                searchJadwal();
             }
         });
 
         JButton btnAdd = new JButton("Tambah Jadwal");
-        btnAdd.setFont(new Font("Inter", Font.BOLD, 14));
-        btnAdd.setForeground(Color.WHITE);
         btnAdd.setBackground(new Color(51, 144, 255));
-        btnAdd.putClientProperty(FlatClientProperties.STYLE, "arc: 15");
-        btnAdd.setPreferredSize(new Dimension(160, 40));
-        btnAdd.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btnAdd.addActionListener(e -> showForm(null));
+        btnAdd.setForeground(Color.WHITE);
+        btnAdd.addActionListener(e -> showJadwalForm(null));
 
-        actionPanel.add(txtSearch);
-        actionPanel.add(btnAdd);
+        actions.add(txtSearchJadwal);
+        actions.add(btnAdd);
+        header.add(title, BorderLayout.WEST);
+        header.add(actions, BorderLayout.EAST);
 
-        headerPanel.add(lblTitle, BorderLayout.WEST);
-        headerPanel.add(actionPanel, BorderLayout.EAST);
-
-        // Table Section
-        String[] columns = { "ID", "Kereta", "Asal", "Tujuan", "Harga", "Berangkat", "Tiba", "Status" };
-        tableModel = new DefaultTableModel(columns, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
+        // Table
+        String[] cols = { "ID", "Kereta", "Asal", "Tujuan", "Berangkat", "Tiba", "Status" };
+        modelJadwal = new DefaultTableModel(cols, 0) {
+            public boolean isCellEditable(int r, int c) {
                 return false;
             }
         };
-
-        table = new JTable(tableModel);
-        table.setRowHeight(45);
-        table.setFont(new Font("Inter", Font.PLAIN, 14));
-        table.getTableHeader().setFont(new Font("Inter", Font.BOLD, 14));
-        table.getTableHeader().setReorderingAllowed(false);
-
-        table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
-            @Override
-            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
-                    boolean hasFocus, int row, int column) {
-                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-                if (c instanceof JLabel) {
-                    ((JLabel) c).setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15));
-                }
-                return c;
+        tblJadwal = new JTable(modelJadwal);
+        setupTable(tblJadwal);
+        tblJadwal.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                loadHarga();
+                loadKursi();
             }
         });
 
-        JScrollPane scrollPane = new JScrollPane(table);
-        scrollPane.putClientProperty(FlatClientProperties.STYLE, "arc: 20; border: 0,0,0,0");
+        // Bottom Actions
+        JPanel bottom = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
+        bottom.setOpaque(false);
 
-        // Action Buttons (Bottom)
-        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
-        bottomPanel.setOpaque(false);
-
-        JButton btnEdit = new JButton("Edit Jadwal");
+        JButton btnEdit = new JButton("Edit");
         btnEdit.setBackground(new Color(76, 175, 80));
         btnEdit.setForeground(Color.WHITE);
-        btnEdit.setPreferredSize(new Dimension(130, 40));
-        btnEdit.putClientProperty(FlatClientProperties.STYLE, "arc: 15");
         btnEdit.addActionListener(e -> {
-            int row = table.getSelectedRow();
+            int row = tblJadwal.getSelectedRow();
             if (row != -1) {
-                int id = (int) table.getValueAt(row, 0);
-                // Need to find original Jadwal from DB to get IDs
-                List<Jadwal> all = jadwalDAO.getAll();
-                Jadwal selected = all.stream().filter(j -> j.getId() == id).findFirst().orElse(null);
-                showForm(selected);
-            } else {
-                JOptionPane.showMessageDialog(this, "Pilih jadwal yang ingin diubah!", "Peringatan",
-                        JOptionPane.WARNING_MESSAGE);
+                int id = (int) tblJadwal.getValueAt(row, 0);
+                Jadwal j = jadwalDAO.getAll().stream().filter(x -> x.getId() == id).findFirst().orElse(null);
+                showJadwalForm(j);
             }
         });
 
-        JButton btnDelete = new JButton("Hapus");
-        btnDelete.setBackground(new Color(244, 67, 54));
-        btnDelete.setForeground(Color.WHITE);
-        btnDelete.setPreferredSize(new Dimension(100, 40));
-        btnDelete.putClientProperty(FlatClientProperties.STYLE, "arc: 15");
-        btnDelete.addActionListener(e -> deleteData());
+        JButton btnDel = new JButton("Hapus");
+        btnDel.setBackground(new Color(244, 67, 54));
+        btnDel.setForeground(Color.WHITE);
+        btnDel.addActionListener(e -> deleteJadwal());
 
-        bottomPanel.add(btnEdit);
-        bottomPanel.add(btnDelete);
+        bottom.add(btnEdit);
+        bottom.add(btnDel);
 
-        add(headerPanel, BorderLayout.NORTH);
-        add(scrollPane, BorderLayout.CENTER);
-        add(bottomPanel, BorderLayout.SOUTH);
+        panel.add(header, BorderLayout.NORTH);
+        panel.add(new JScrollPane(tblJadwal), BorderLayout.CENTER);
+        panel.add(bottom, BorderLayout.SOUTH);
+        return panel;
     }
 
-    private void loadData() {
-        tableModel.setRowCount(0);
-        List<Jadwal> list = jadwalDAO.getAll();
-        for (Jadwal j : list) {
-            tableModel.addRow(new Object[] {
-                    j.getId(),
-                    j.getNamaKereta(),
-                    j.getNamaStasiunAwal(),
-                    j.getNamaStasiunTujuan(),
-                    "Rp " + String.format("%,d", j.getHargaTiket()),
-                    dateFormat.format(j.getWaktuBerangkat()),
-                    dateFormat.format(j.getWaktuTiba()),
-                    j.getStatus()
-            });
-        }
+    // --- HARGA TAB ---
+    private JPanel createHargaPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setOpaque(false);
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        lblHargaTitle = new JLabel("Pilih Jadwal untuk mengelola harga");
+        lblHargaTitle.setFont(new Font("Inter", Font.BOLD, 18));
+        lblHargaTitle.setForeground(Color.WHITE);
+        lblHargaTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
+
+        // Table
+        String[] cols = { "ID", "Kelas", "Harga Tiket", "Update Terakhir" };
+        modelHarga = new DefaultTableModel(cols, 0) {
+            public boolean isCellEditable(int r, int c) {
+                return false;
+            }
+        };
+        tblHarga = new JTable(modelHarga);
+        setupTable(tblHarga);
+
+        JPanel bottom = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
+        bottom.setOpaque(false);
+
+        JButton btnAdd = new JButton("Atur Harga");
+        btnAdd.setBackground(new Color(51, 144, 255));
+        btnAdd.setForeground(Color.WHITE);
+        btnAdd.addActionListener(e -> showHargaForm());
+
+        JButton btnDel = new JButton("Hapus Harga");
+        btnDel.setBackground(new Color(244, 67, 54));
+        btnDel.setForeground(Color.WHITE);
+        btnDel.addActionListener(e -> deleteHarga());
+
+        bottom.add(btnAdd);
+        bottom.add(btnDel);
+
+        panel.add(lblHargaTitle, BorderLayout.NORTH);
+        panel.add(new JScrollPane(tblHarga), BorderLayout.CENTER);
+        panel.add(bottom, BorderLayout.SOUTH);
+        return panel;
     }
 
-    private void searchData() {
-        String keyword = txtSearch.getText();
-        tableModel.setRowCount(0);
-        List<Jadwal> list = jadwalDAO.search(keyword);
-        for (Jadwal j : list) {
-            tableModel.addRow(new Object[] {
-                    j.getId(),
-                    j.getNamaKereta(),
-                    j.getNamaStasiunAwal(),
-                    j.getNamaStasiunTujuan(),
-                    "Rp " + String.format("%,d", j.getHargaTiket()),
-                    dateFormat.format(j.getWaktuBerangkat()),
-                    dateFormat.format(j.getWaktuTiba()),
-                    j.getStatus()
-            });
-        }
+    // --- KURSI TAB ---
+    private JPanel createKursiPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setOpaque(false);
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        lblKursiTitle = new JLabel("Pilih Jadwal untuk melihat status kursi");
+        lblKursiTitle.setFont(new Font("Inter", Font.BOLD, 18));
+        lblKursiTitle.setForeground(Color.WHITE);
+        lblKursiTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
+
+        // Table
+        String[] cols = { "ID", "Baris", "Kode Kursi", "Status" };
+        modelKursi = new DefaultTableModel(cols, 0) {
+            public boolean isCellEditable(int r, int c) {
+                return false;
+            }
+        };
+        tblKursi = new JTable(modelKursi);
+        setupTable(tblKursi);
+
+        JPanel bottom = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
+        bottom.setOpaque(false);
+
+        JButton btnUpdateStatus = new JButton("Ubah Status (Tersedia/Terisi)");
+        btnUpdateStatus.setBackground(new Color(76, 175, 80));
+        btnUpdateStatus.setForeground(Color.WHITE);
+        btnUpdateStatus.addActionListener(e -> updateKursiStatus());
+
+        bottom.add(btnUpdateStatus);
+
+        panel.add(lblKursiTitle, BorderLayout.NORTH);
+        panel.add(new JScrollPane(tblKursi), BorderLayout.CENTER);
+        panel.add(bottom, BorderLayout.SOUTH);
+        return panel;
     }
 
-    private void deleteData() {
-        int row = table.getSelectedRow();
+    private void setupTable(JTable table) {
+        table.setRowHeight(40);
+        table.setFont(new Font("Inter", Font.PLAIN, 14));
+        table.getTableHeader().setFont(new Font("Inter", Font.BOLD, 14));
+        table.setShowGrid(true);
+        table.setGridColor(new Color(60, 60, 60));
+        DefaultTableCellRenderer renderer = new DefaultTableCellRenderer();
+        renderer.setHorizontalAlignment(JLabel.CENTER);
+        table.setDefaultRenderer(Object.class, renderer);
+    }
+
+    // --- LOGIC JADWAL ---
+    private void loadJadwal() {
+        modelJadwal.setRowCount(0);
+        jadwalDAO.getAll().forEach(j -> modelJadwal.addRow(new Object[] {
+                j.getId(), j.getNamaKereta(), j.getNamaStasiunAsal(), j.getNamaStasiunTujuan(),
+                j.getWaktuBerangkat(), j.getWaktuTiba(), j.getStatus()
+        }));
+    }
+
+    private void searchJadwal() {
+        modelJadwal.setRowCount(0);
+        jadwalDAO.search(txtSearchJadwal.getText()).forEach(j -> modelJadwal.addRow(new Object[] {
+                j.getId(), j.getNamaKereta(), j.getNamaStasiunAsal(), j.getNamaStasiunTujuan(),
+                j.getWaktuBerangkat(), j.getWaktuTiba(), j.getStatus()
+        }));
+    }
+
+    private void deleteJadwal() {
+        int row = tblJadwal.getSelectedRow();
         if (row != -1) {
-            int id = (int) table.getValueAt(row, 0);
-            int confirm = JOptionPane.showConfirmDialog(this, "Yakin ingin menghapus jadwal ini?", "Konfirmasi Hapus",
-                    JOptionPane.YES_NO_OPTION);
-            if (confirm == JOptionPane.YES_OPTION) {
+            int id = (int) tblJadwal.getValueAt(row, 0);
+            if (JOptionPane.showConfirmDialog(this,
+                    "Hapus jadwal ini? Semua harga dan status kursi terkait akan hilang.", "Konfirmasi",
+                    JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+                // Cascading delete is handled in DB or manually here
+                hargaDAO.getByJadwalId(id).forEach(h -> hargaDAO.delete(h.getId()));
+                kursiDAO.deleteByJadwalId(id);
                 if (jadwalDAO.delete(id)) {
-                    loadData();
-                    JOptionPane.showMessageDialog(this, "Jadwal berhasil dihapus!");
+                    loadJadwal();
+                    JOptionPane.showMessageDialog(this, "Berhasil dihapus");
                 }
             }
-        } else {
-            JOptionPane.showMessageDialog(this, "Pilih data yang ingin dihapus!", "Peringatan",
-                    JOptionPane.WARNING_MESSAGE);
         }
     }
 
-    private void showForm(Jadwal jadwal) {
+    private void showJadwalForm(Jadwal j) {
         JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this),
-                jadwal == null ? "Tambah Jadwal" : "Edit Jadwal", true);
-        dialog.setLayout(new BorderLayout());
-        dialog.setSize(500, 600);
+                j == null ? "Tambah Jadwal" : "Edit Jadwal", true);
+        dialog.setSize(450, 550);
         dialog.setLocationRelativeTo(this);
+        JPanel p = new JPanel(new GridLayout(0, 1, 10, 10));
+        p.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
 
-        JPanel panel = new JPanel(new GridLayout(0, 2, 10, 15));
-        panel.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
+        JComboBox<ComboItem> cbKereta = new JComboBox<>();
+        keretaDAO.getAll().forEach(k -> cbKereta.addItem(new ComboItem(k.getId(), k.getNamaKereta())));
 
-        // Fetch Dynamic Data for Dropdowns
-        List<Kereta> keretas = keretaDAO.getAll();
-        List<Stasiun> stasiuns = stasiunDAO.getAll();
+        JComboBox<ComboItem> cbAsal = new JComboBox<>();
+        stasiunDAO.getAll().forEach(s -> cbAsal.addItem(new ComboItem(s.getId(), s.getNamaStasiun())));
 
-        JComboBox<Item> cbKereta = new JComboBox<>();
-        keretas.forEach(k -> cbKereta.addItem(new Item(k.getId(), k.getNamaKereta())));
+        JComboBox<ComboItem> cbTujuan = new JComboBox<>();
+        stasiunDAO.getAll().forEach(s -> cbTujuan.addItem(new ComboItem(s.getId(), s.getNamaStasiun())));
 
-        JComboBox<Item> cbAsal = new JComboBox<>();
-        JComboBox<Item> cbTujuan = new JComboBox<>();
-        stasiuns.forEach(s -> {
-            cbAsal.addItem(new Item(s.getId(), s.getNamaStasiun()));
-            cbTujuan.addItem(new Item(s.getId(), s.getNamaStasiun()));
-        });
+        JTextField fBerangkat = new JTextField(j != null ? j.getWaktuBerangkat().toString() : "2024-01-01 08:00:00");
+        JTextField fTiba = new JTextField(j != null ? j.getWaktuTiba().toString() : "2024-01-01 10:00:00");
 
-        JTextField fHarga = new JTextField();
-        fHarga.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Nominal Rupiah");
+        JComboBox<String> cbStatus = new JComboBox<>(new String[] { "Aktif", "Dibatalkan", "Selesai" });
+        if (j != null)
+            cbStatus.setSelectedItem(j.getStatus());
 
-        // Date/Time Spinners
-        JSpinner sBerangkat = new JSpinner(new SpinnerDateModel());
-        JSpinner.DateEditor editorBerangkat = new JSpinner.DateEditor(sBerangkat, "yyyy-MM-dd HH:mm");
-        sBerangkat.setEditor(editorBerangkat);
-        sBerangkat.putClientProperty(FlatClientProperties.STYLE, "arc: 15");
+        p.add(new JLabel("Kereta:"));
+        p.add(cbKereta);
+        p.add(new JLabel("Stasiun Asal:"));
+        p.add(cbAsal);
+        p.add(new JLabel("Stasiun Tujuan:"));
+        p.add(cbTujuan);
+        p.add(new JLabel("Waktu Berangkat (YYYY-MM-DD HH:MM:SS):"));
+        p.add(fBerangkat);
+        p.add(new JLabel("Waktu Tiba (YYYY-MM-DD HH:MM:SS):"));
+        p.add(fTiba);
+        p.add(new JLabel("Status:"));
+        p.add(cbStatus);
 
-        JSpinner sTiba = new JSpinner(new SpinnerDateModel());
-        JSpinner.DateEditor editorTiba = new JSpinner.DateEditor(sTiba, "yyyy-MM-dd HH:mm");
-        sTiba.setEditor(editorTiba);
-        sTiba.putClientProperty(FlatClientProperties.STYLE, "arc: 15");
-
-        JComboBox<String> cbStatus = new JComboBox<>(new String[] { "Aktif", "Selesai", "Dibatalkan", "Delay" });
-
-        if (jadwal != null) {
-            setSelectedId(cbKereta, jadwal.getKeretaId());
-            setSelectedId(cbAsal, jadwal.getStasiunAwalId());
-            setSelectedId(cbTujuan, jadwal.getStasiunTujuanId());
-            fHarga.setText(String.valueOf(jadwal.getHargaTiket()));
-            sBerangkat.setValue(new java.util.Date(jadwal.getWaktuBerangkat().getTime()));
-            sTiba.setValue(new java.util.Date(jadwal.getWaktuTiba().getTime()));
-            cbStatus.setSelectedItem(jadwal.getStatus());
-        }
-
-        panel.add(new JLabel("Pilih Kereta:"));
-        panel.add(cbKereta);
-        panel.add(new JLabel("Stasiun Asal:"));
-        panel.add(cbAsal);
-        panel.add(new JLabel("Stasiun Tujuan:"));
-        panel.add(cbTujuan);
-        panel.add(new JLabel("Harga Tiket:"));
-        panel.add(fHarga);
-        panel.add(new JLabel("Waktu Berangkat:"));
-        panel.add(sBerangkat);
-        panel.add(new JLabel("Waktu Tiba:"));
-        panel.add(sTiba);
-        panel.add(new JLabel("Status:"));
-        panel.add(cbStatus);
-
-        JButton btnSave = new JButton("Simpan Jadwal");
-        btnSave.setFont(new Font("Inter", Font.BOLD, 14));
-        btnSave.setBackground(new Color(51, 144, 255));
-        btnSave.setForeground(Color.WHITE);
-        btnSave.setPreferredSize(new Dimension(0, 50));
-        btnSave.addActionListener(e -> {
+        JButton btn = new JButton("Simpan");
+        btn.addActionListener(e -> {
             try {
-                if (fHarga.getText().isEmpty()) {
-                    throw new Exception("Lengkapi semua field!");
-                }
+                Jadwal jadwal = (j == null) ? new Jadwal() : j;
+                jadwal.setKeretaId(((ComboItem) cbKereta.getSelectedItem()).id);
+                jadwal.setStasiunAsalId(((ComboItem) cbAsal.getSelectedItem()).id);
+                jadwal.setStasiunTujuanId(((ComboItem) cbTujuan.getSelectedItem()).id);
+                jadwal.setWaktuBerangkat(Timestamp.valueOf(fBerangkat.getText()));
+                jadwal.setWaktuTiba(Timestamp.valueOf(fTiba.getText()));
+                jadwal.setStatus(cbStatus.getSelectedItem().toString());
 
-                Jadwal j = (jadwal == null) ? new Jadwal() : jadwal;
-                j.setKeretaId(((Item) cbKereta.getSelectedItem()).id);
-                j.setStasiunAwalId(((Item) cbAsal.getSelectedItem()).id);
-                j.setStasiunTujuanId(((Item) cbTujuan.getSelectedItem()).id);
-                j.setHargaTiket(Integer.parseInt(fHarga.getText()));
-
-                // Get Date from Spinner
-                java.util.Date dBerangkat = (java.util.Date) sBerangkat.getValue();
-                java.util.Date dTiba = (java.util.Date) sTiba.getValue();
-
-                j.setWaktuBerangkat(new Timestamp(dBerangkat.getTime()));
-                j.setWaktuTiba(new Timestamp(dTiba.getTime()));
-                j.setStatus(cbStatus.getSelectedItem().toString());
-
-                boolean success = (jadwal == null) ? jadwalDAO.insert(j) : jadwalDAO.update(j);
-                if (success) {
-                    loadData();
-                    dialog.dispose();
-                    JOptionPane.showMessageDialog(this, "Jadwal Berhasil Disimpan!");
+                if (j == null) {
+                    int id = jadwalDAO.insert(jadwal);
+                    if (id != -1) {
+                        kursiDAO.initializeSeats(id, jadwal.getKeretaId());
+                        loadJadwal();
+                        dialog.dispose();
+                    }
+                } else {
+                    if (jadwalDAO.update(jadwal)) {
+                        loadJadwal();
+                        dialog.dispose();
+                    }
                 }
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(dialog, "Error: " + ex.getMessage(), "Input Salah",
-                        JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(dialog, "Format waktu salah! Gunakan: YYYY-MM-DD HH:MM:SS");
             }
         });
 
-        dialog.add(panel, BorderLayout.CENTER);
-        dialog.add(btnSave, BorderLayout.SOUTH);
+        dialog.add(p, BorderLayout.CENTER);
+        dialog.add(btn, BorderLayout.SOUTH);
         dialog.setVisible(true);
     }
 
-    // Helper for ComboBox IDs
-    private static class Item {
+    // --- LOGIC HARGA ---
+    private void loadHarga() {
+        int row = tblJadwal.getSelectedRow();
+        if (row != -1) {
+            int jId = (int) tblJadwal.getValueAt(row, 0);
+            String kereta = (String) tblJadwal.getValueAt(row, 1);
+            lblHargaTitle.setText("Harga Tiket Jadwal ID: " + jId + " (" + kereta + ")");
+            modelHarga.setRowCount(0);
+            hargaDAO.getByJadwalId(jId).forEach(h -> modelHarga.addRow(new Object[] {
+                    h.getId(), h.getNamaKelas(), h.getHargaTiket(), h.getUpdatedAt()
+            }));
+        } else {
+            lblHargaTitle.setText("Pilih Jadwal untuk mengelola harga");
+            modelHarga.setRowCount(0);
+        }
+    }
+
+    private void deleteHarga() {
+        int row = tblHarga.getSelectedRow();
+        if (row != -1) {
+            int id = (int) tblHarga.getValueAt(row, 0);
+            if (hargaDAO.delete(id)) {
+                loadHarga();
+            }
+        }
+    }
+
+    private void showHargaForm() {
+        int rowJ = tblJadwal.getSelectedRow();
+        if (rowJ == -1)
+            return;
+        int jId = (int) tblJadwal.getValueAt(rowJ, 0);
+
+        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Atur Harga", true);
+        dialog.setSize(350, 300);
+        dialog.setLocationRelativeTo(this);
+        JPanel p = new JPanel(new GridLayout(0, 1, 10, 10));
+        p.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
+
+        JComboBox<ComboItem> cbKelas = new JComboBox<>();
+        kelasDAO.getAll().forEach(k -> cbKelas.addItem(new ComboItem(k.getId(), k.getNamaKelasKereta())));
+
+        JTextField fHarga = new JTextField();
+        p.add(new JLabel("Pilih Kelas:"));
+        p.add(cbKelas);
+        p.add(new JLabel("Harga Tiket:"));
+        p.add(fHarga);
+
+        JButton btn = new JButton("Simpan");
+        btn.addActionListener(e -> {
+            try {
+                JadwalHarga jh = new JadwalHarga();
+                jh.setJadwalId(jId);
+                jh.setKelasId(((ComboItem) cbKelas.getSelectedItem()).id);
+                jh.setHargaTiket(Integer.parseInt(fHarga.getText()));
+                if (hargaDAO.insert(jh)) {
+                    loadHarga();
+                    dialog.dispose();
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(dialog, "Harga harus berupa angka!");
+            }
+        });
+
+        dialog.add(p, BorderLayout.CENTER);
+        dialog.add(btn, BorderLayout.SOUTH);
+        dialog.setVisible(true);
+    }
+
+    // --- LOGIC KURSI ---
+    private void loadKursi() {
+        int row = tblJadwal.getSelectedRow();
+        if (row != -1) {
+            int jId = (int) tblJadwal.getValueAt(row, 0);
+            lblKursiTitle.setText("Status Kursi Jadwal ID: " + jId);
+            modelKursi.setRowCount(0);
+            kursiDAO.getByJadwalId(jId).forEach(k -> modelKursi.addRow(new Object[] {
+                    k.getId(), k.getBarisKursi(), k.getKodeKursi(), k.getStatus()
+            }));
+        } else {
+            lblKursiTitle.setText("Pilih Jadwal untuk melihat status kursi");
+            modelKursi.setRowCount(0);
+        }
+    }
+
+    private void updateKursiStatus() {
+        int row = tblKursi.getSelectedRow();
+        if (row != -1) {
+            int id = (int) tblKursi.getValueAt(row, 0);
+            String currentStatus = (String) tblKursi.getValueAt(row, 3);
+            String newStatus = currentStatus.equals("Tersedia") ? "Terisi" : "Tersedia";
+            if (kursiDAO.updateStatus(id, newStatus)) {
+                loadKursi();
+            }
+        }
+    }
+
+    private static class ComboItem {
         int id;
         String name;
 
-        Item(int id, String name) {
+        ComboItem(int id, String name) {
             this.id = id;
             this.name = name;
         }
 
-        @Override
         public String toString() {
             return name;
-        }
-    }
-
-    private void setSelectedId(JComboBox<Item> cb, int id) {
-        for (int i = 0; i < cb.getItemCount(); i++) {
-            if (cb.getItemAt(i).id == id) {
-                cb.setSelectedIndex(i);
-                break;
-            }
         }
     }
 }
