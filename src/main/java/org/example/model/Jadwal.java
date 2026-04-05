@@ -5,9 +5,8 @@ import java.sql.Timestamp;
 public class Jadwal {
     private int id;
     private int keretaId;
-    private int stasiunAwalId;
+    private int stasiunAsalId;
     private int stasiunTujuanId;
-    private int hargaTiket;
     private Timestamp waktuBerangkat;
     private Timestamp waktuTiba;
     private String status;
@@ -16,7 +15,7 @@ public class Jadwal {
 
     // Display helpers (JOIN results)
     private String namaKereta;
-    private String namaStasiunAwal;
+    private String namaStasiunAsal;
     private String namaStasiunTujuan;
 
     public Jadwal() {}
@@ -27,14 +26,11 @@ public class Jadwal {
     public int getKeretaId() { return keretaId; }
     public void setKeretaId(int keretaId) { this.keretaId = keretaId; }
 
-    public int getStasiunAwalId() { return stasiunAwalId; }
-    public void setStasiunAwalId(int stasiunAwalId) { this.stasiunAwalId = stasiunAwalId; }
+    public int getStasiunAsalId() { return stasiunAsalId; }
+    public void setStasiunAsalId(int stasiunAsalId) { this.stasiunAsalId = stasiunAsalId; }
 
     public int getStasiunTujuanId() { return stasiunTujuanId; }
     public void setStasiunTujuanId(int stasiunTujuanId) { this.stasiunTujuanId = stasiunTujuanId; }
-
-    public int getHargaTiket() { return hargaTiket; }
-    public void setHargaTiket(int hargaTiket) { this.hargaTiket = hargaTiket; }
 
     public Timestamp getWaktuBerangkat() { return waktuBerangkat; }
     public void setWaktuBerangkat(Timestamp waktuBerangkat) { this.waktuBerangkat = waktuBerangkat; }
@@ -54,8 +50,8 @@ public class Jadwal {
     public String getNamaKereta() { return namaKereta; }
     public void setNamaKereta(String namaKereta) { this.namaKereta = namaKereta; }
 
-    public String getNamaStasiunAwal() { return namaStasiunAwal; }
-    public void setNamaStasiunAwal(String namaStasiunAwal) { this.namaStasiunAwal = namaStasiunAwal; }
+    public String getNamaStasiunAsal() { return namaStasiunAsal; }
+    public void setNamaStasiunAsal(String namaStasiunAsal) { this.namaStasiunAsal = namaStasiunAsal; }
 
     public String getNamaStasiunTujuan() { return namaStasiunTujuan; }
     public void setNamaStasiunTujuan(String namaStasiunTujuan) { this.namaStasiunTujuan = namaStasiunTujuan; }
