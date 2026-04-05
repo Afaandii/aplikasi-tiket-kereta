@@ -2,235 +2,313 @@ package org.example.view;
 
 import com.formdev.flatlaf.FlatClientProperties;
 import org.example.dao.KeretaDAO;
+import org.example.dao.KelasKeretaDAO;
 import org.example.model.Kereta;
+import org.example.model.KelasKereta;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.util.List;
 
 public class KeretaManagementPanel extends JPanel {
     private final KeretaDAO keretaDAO;
-    private JTable table;
-    private DefaultTableModel tableModel;
-    private JTextField txtSearch;
+    private final KelasKeretaDAO kelasKeretaDAO;
+    
+    private JTable keretaTable;
+    private DefaultTableModel keretaTableModel;
+    private JTextField txtSearchKereta;
+    
+    private JTable kelasTable;
+    private DefaultTableModel kelasTableModel;
+    private JTextField txtSearchKelas;
 
     public KeretaManagementPanel() {
         this.keretaDAO = new KeretaDAO();
+        this.kelasKeretaDAO = new KelasKeretaDAO();
         initComponents();
-        loadData();
+        loadKeretaData();
+        loadKelasData();
     }
 
     private void initComponents() {
         setLayout(new BorderLayout());
         setOpaque(false);
-        setBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30));
 
-        // Header Section
-        JPanel headerPanel = new JPanel(new BorderLayout());
-        headerPanel.setOpaque(false);
-        headerPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
+        JTabbedPane tabbedPane = new JTabbedPane();
+        tabbedPane.putClientProperty(FlatClientProperties.STYLE, "tabType:card; arc: 20");
+        
+        tabbedPane.addTab("Daftar Kereta", createKeretaPanel());
+        tabbedPane.addTab("Kategori Kelas", createKelasKeretaPanel());
 
-        JLabel lblTitle = new JLabel("Kelola Data Kereta");
-        lblTitle.setFont(new Font("Inter", Font.BOLD, 24));
-        lblTitle.setForeground(Color.WHITE);
+        add(tabbedPane, BorderLayout.CENTER);
+    }
 
-        // Search & Add Button
-        JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
-        actionPanel.setOpaque(false);
+    // --- KERETA TAB ---
+    private JPanel createKeretaPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setOpaque(false);
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        txtSearch = new JTextField();
-        txtSearch.setPreferredSize(new Dimension(250, 40));
-        txtSearch.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Cari Kode atau Nama...");
-        txtSearch.putClientProperty(FlatClientProperties.STYLE, "arc: 15");
-        txtSearch.addKeyListener(new java.awt.event.KeyAdapter() {
-            @Override
-            public void keyReleased(java.awt.event.KeyEvent e) {
-                searchData();
-            }
+        // Header
+        JPanel header = new JPanel(new BorderLayout());
+        header.setOpaque(false);
+        header.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
+
+        JLabel title = new JLabel("Kelola Data Kereta");
+        title.setFont(new Font("Inter", Font.BOLD, 20));
+        title.setForeground(Color.WHITE);
+
+        JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        actions.setOpaque(false);
+
+        txtSearchKereta = new JTextField();
+        txtSearchKereta.setPreferredSize(new Dimension(200, 35));
+        txtSearchKereta.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Cari...");
+        txtSearchKereta.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent e) { searchKereta(); }
         });
 
         JButton btnAdd = new JButton("Tambah Kereta");
-        btnAdd.setFont(new Font("Inter", Font.BOLD, 14));
-        btnAdd.setForeground(Color.WHITE);
         btnAdd.setBackground(new Color(51, 144, 255));
-        btnAdd.putClientProperty(FlatClientProperties.STYLE, "arc: 15");
-        btnAdd.setPreferredSize(new Dimension(160, 40));
-        btnAdd.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btnAdd.addActionListener(e -> showForm(null));
+        btnAdd.setForeground(Color.WHITE);
+        btnAdd.addActionListener(e -> showKeretaForm(null));
 
-        actionPanel.add(txtSearch);
-        actionPanel.add(btnAdd);
+        actions.add(txtSearchKereta);
+        actions.add(btnAdd);
+        header.add(title, BorderLayout.WEST);
+        header.add(actions, BorderLayout.EAST);
 
-        headerPanel.add(lblTitle, BorderLayout.WEST);
-        headerPanel.add(actionPanel, BorderLayout.EAST);
-
-        // Table Section
-        String[] columns = {"ID", "Kode Kereta", "Nama Kereta", "Tipe Kereta", "Tanggal Dibuat"};
-        tableModel = new DefaultTableModel(columns, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
+        // Table
+        String[] cols = {"ID", "Kode Kereta", "Nama Kereta", "Tanggal Dibuat", "Tanggal Diupdate"};
+        keretaTableModel = new DefaultTableModel(cols, 0) {
+            public boolean isCellEditable(int r, int c) { return false; }
         };
+        keretaTable = new JTable(keretaTableModel);
+        setupTable(keretaTable);
 
-        table = new JTable(tableModel);
-        table.setRowHeight(45);
-        table.setFont(new Font("Inter", Font.PLAIN, 14));
-        table.getTableHeader().setFont(new Font("Inter", Font.BOLD, 14));
-        table.getTableHeader().setReorderingAllowed(false);
-        table.setShowGrid(true);
-        table.setGridColor(new Color(60, 60, 60));
-        
-        table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
-            @Override
-            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-                if (c instanceof JLabel) {
-                    ((JLabel) c).setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15));
-                }
-                return c;
-            }
-        });
+        // Bottom Actions
+        JPanel bottom = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
+        bottom.setOpaque(false);
 
-        JScrollPane scrollPane = new JScrollPane(table);
-        scrollPane.putClientProperty(FlatClientProperties.STYLE, "arc: 20; border: 0,0,0,0");
-
-        // Action Buttons (Bottom)
-        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
-        bottomPanel.setOpaque(false);
-
-        JButton btnEdit = new JButton("Edit Terpilih");
+        JButton btnEdit = new JButton("Edit");
         btnEdit.setBackground(new Color(76, 175, 80));
         btnEdit.setForeground(Color.WHITE);
-        btnEdit.setPreferredSize(new Dimension(130, 40));
-        btnEdit.putClientProperty(FlatClientProperties.STYLE, "arc: 15");
         btnEdit.addActionListener(e -> {
-            int row = table.getSelectedRow();
+            int row = keretaTable.getSelectedRow();
             if (row != -1) {
-                int id = (int) table.getValueAt(row, 0);
-                List<Kereta> all = keretaDAO.getAll();
-                Kereta selected = all.stream().filter(k -> k.getId() == id).findFirst().orElse(null);
-                showForm(selected);
-            } else {
-                JOptionPane.showMessageDialog(this, "Pilih data yang ingin diubah!", "Peringatan", JOptionPane.WARNING_MESSAGE);
+                int id = (int) keretaTable.getValueAt(row, 0);
+                Kereta k = keretaDAO.getAll().stream().filter(x -> x.getId() == id).findFirst().orElse(null);
+                showKeretaForm(k);
             }
         });
 
-        JButton btnDelete = new JButton("Hapus");
-        btnDelete.setBackground(new Color(244, 67, 54));
-        btnDelete.setForeground(Color.WHITE);
-        btnDelete.setPreferredSize(new Dimension(100, 40));
-        btnDelete.putClientProperty(FlatClientProperties.STYLE, "arc: 15");
-        btnDelete.addActionListener(e -> deleteData());
+        JButton btnDel = new JButton("Hapus");
+        btnDel.setBackground(new Color(244, 67, 54));
+        btnDel.setForeground(Color.WHITE);
+        btnDel.addActionListener(e -> deleteKereta());
 
-        bottomPanel.add(btnEdit);
-        bottomPanel.add(btnDelete);
+        bottom.add(btnEdit);
+        bottom.add(btnDel);
 
-        add(headerPanel, BorderLayout.NORTH);
-        add(scrollPane, BorderLayout.CENTER);
-        add(bottomPanel, BorderLayout.SOUTH);
+        panel.add(header, BorderLayout.NORTH);
+        panel.add(new JScrollPane(keretaTable), BorderLayout.CENTER);
+        panel.add(bottom, BorderLayout.SOUTH);
+        return panel;
     }
 
-    private void loadData() {
-        tableModel.setRowCount(0);
-        List<Kereta> list = keretaDAO.getAll();
-        for (Kereta k : list) {
-            tableModel.addRow(new Object[]{
-                k.getId(),
-                k.getKodeKereta(),
-                k.getNamaKereta(),
-                k.getTipeKereta(),
-                k.getCreatedAt()
-            });
-        }
+    // --- KELAS TAB ---
+    private JPanel createKelasKeretaPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setOpaque(false);
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        // Header
+        JPanel header = new JPanel(new BorderLayout());
+        header.setOpaque(false);
+        header.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
+
+        JLabel title = new JLabel("Kelola Kategori Kelas");
+        title.setFont(new Font("Inter", Font.BOLD, 20));
+        title.setForeground(Color.WHITE);
+
+        JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        actions.setOpaque(false);
+
+        txtSearchKelas = new JTextField();
+        txtSearchKelas.setPreferredSize(new Dimension(200, 35));
+        txtSearchKelas.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Cari...");
+        txtSearchKelas.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent e) { searchKelas(); }
+        });
+
+        JButton btnAdd = new JButton("Tambah Kelas");
+        btnAdd.setBackground(new Color(51, 144, 255));
+        btnAdd.setForeground(Color.WHITE);
+        btnAdd.addActionListener(e -> showKelasForm(null));
+
+        actions.add(txtSearchKelas);
+        actions.add(btnAdd);
+        header.add(title, BorderLayout.WEST);
+        header.add(actions, BorderLayout.EAST);
+
+        // Table
+        String[] cols = {"ID", "Nama Kelas", "Tanggal Dibuat", "Tanggal Diupdate"};
+        kelasTableModel = new DefaultTableModel(cols, 0) {
+            public boolean isCellEditable(int r, int c) { return false; }
+        };
+        kelasTable = new JTable(kelasTableModel);
+        setupTable(kelasTable);
+
+        // Bottom Actions
+        JPanel bottom = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
+        bottom.setOpaque(false);
+
+        JButton btnEdit = new JButton("Edit");
+        btnEdit.setBackground(new Color(76, 175, 80));
+        btnEdit.setForeground(Color.WHITE);
+        btnEdit.addActionListener(e -> {
+            int row = kelasTable.getSelectedRow();
+            if (row != -1) {
+                int id = (int) kelasTable.getValueAt(row, 0);
+                KelasKereta k = kelasKeretaDAO.getAll().stream().filter(x -> x.getId() == id).findFirst().orElse(null);
+                showKelasForm(k);
+            }
+        });
+
+        JButton btnDel = new JButton("Hapus");
+        btnDel.setBackground(new Color(244, 67, 54));
+        btnDel.setForeground(Color.WHITE);
+        btnDel.addActionListener(e -> deleteKelas());
+
+        bottom.add(btnEdit);
+        bottom.add(btnDel);
+
+        panel.add(header, BorderLayout.NORTH);
+        panel.add(new JScrollPane(kelasTable), BorderLayout.CENTER);
+        panel.add(bottom, BorderLayout.SOUTH);
+        return panel;
     }
 
-    private void searchData() {
-        String keyword = txtSearch.getText();
-        tableModel.setRowCount(0);
-        List<Kereta> list = keretaDAO.search(keyword);
-        for (Kereta k : list) {
-            tableModel.addRow(new Object[]{
-                k.getId(),
-                k.getKodeKereta(),
-                k.getNamaKereta(),
-                k.getTipeKereta(),
-                k.getCreatedAt()
-            });
-        }
+    private void setupTable(JTable table) {
+        table.setRowHeight(40);
+        table.setFont(new Font("Inter", Font.PLAIN, 14));
+        table.getTableHeader().setFont(new Font("Inter", Font.BOLD, 14));
+        table.setShowGrid(true);
+        table.setGridColor(new Color(60, 60, 60));
+        DefaultTableCellRenderer renderer = new DefaultTableCellRenderer();
+        renderer.setHorizontalAlignment(JLabel.CENTER);
+        table.setDefaultRenderer(Object.class, renderer);
     }
 
-    private void deleteData() {
-        int row = table.getSelectedRow();
+    // --- LOGIC KERETA ---
+    private void loadKeretaData() {
+        keretaTableModel.setRowCount(0);
+        keretaDAO.getAll().forEach(k -> keretaTableModel.addRow(new Object[]{
+            k.getId(), k.getKodeKereta(), k.getNamaKereta(), k.getCreatedAt(), k.getUpdatedAt()
+        }));
+    }
+
+    private void searchKereta() {
+        keretaTableModel.setRowCount(0);
+        keretaDAO.search(txtSearchKereta.getText()).forEach(k -> keretaTableModel.addRow(new Object[]{
+            k.getId(), k.getKodeKereta(), k.getNamaKereta(), k.getCreatedAt(), k.getUpdatedAt()
+        }));
+    }
+
+    private void deleteKereta() {
+        int row = keretaTable.getSelectedRow();
         if (row != -1) {
-            int id = (int) table.getValueAt(row, 0);
-            int confirm = JOptionPane.showConfirmDialog(this, "Yakin ingin menghapus data ini?", "Konfirmasi Hapus", JOptionPane.YES_NO_OPTION);
-            if (confirm == JOptionPane.YES_OPTION) {
+            int id = (int) keretaTable.getValueAt(row, 0);
+            if (JOptionPane.showConfirmDialog(this, "Hapus data ini?", "Konfirmasi", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
                 if (keretaDAO.delete(id)) {
-                    loadData();
-                    JOptionPane.showMessageDialog(this, "Data berhasil dihapus!");
+                    loadKeretaData();
+                    JOptionPane.showMessageDialog(this, "Berhasil dihapus");
                 }
             }
         }
     }
 
-    private void showForm(Kereta kereta) {
-        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), 
-            kereta == null ? "Tambah Kereta" : "Edit Kereta", true);
-        dialog.setLayout(new BorderLayout());
-        dialog.setSize(400, 450);
+    private void showKeretaForm(Kereta k) {
+        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), k == null ? "Tambah" : "Edit", true);
+        dialog.setSize(350, 300);
         dialog.setLocationRelativeTo(this);
+        JPanel p = new JPanel(new GridLayout(0, 1, 10, 10));
+        p.setBorder(BorderFactory.createEmptyBorder(20,20,20,20));
 
-        JPanel panel = new JPanel(new GridLayout(0, 1, 10, 10));
-        panel.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
+        JTextField fKode = new JTextField(k != null ? k.getKodeKereta() : "");
+        JTextField fNama = new JTextField(k != null ? k.getNamaKereta() : "");
 
-        JTextField fKode = new JTextField();
-        fKode.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Contoh: ARGO-001");
-        JTextField fNama = new JTextField();
-        fNama.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Contoh: Argo Bromo Anggrek");
-        
-        String[] tipeList = {"Eksekutif", "Bisnis", "Ekonomi", "Luxury"};
-        JComboBox<String> fTipe = new JComboBox<>(tipeList);
+        p.add(new JLabel("Kode Kereta:")); p.add(fKode);
+        p.add(new JLabel("Nama Kereta:")); p.add(fNama);
 
-        if (kereta != null) {
-            fKode.setText(kereta.getKodeKereta());
-            fNama.setText(kereta.getNamaKereta());
-            fTipe.setSelectedItem(kereta.getTipeKereta());
-        }
-
-        panel.add(new JLabel("Kode Kereta:"));
-        panel.add(fKode);
-        panel.add(new JLabel("Nama Kereta:"));
-        panel.add(fNama);
-        panel.add(new JLabel("Tipe Kereta:"));
-        panel.add(fTipe);
-
-        JButton btnSave = new JButton("Simpan");
-        btnSave.setBackground(new Color(51, 144, 255));
-        btnSave.setForeground(Color.WHITE);
-        btnSave.addActionListener(e -> {
-            if (fKode.getText().isEmpty() || fNama.getText().isEmpty()) {
-                JOptionPane.showMessageDialog(dialog, "Mohon isi semua field!");
-                return;
-            }
-
-            Kereta k = (kereta == null) ? new Kereta() : kereta;
-            k.setKodeKereta(fKode.getText());
-            k.setNamaKereta(fNama.getText());
-            k.setTipeKereta((String) fTipe.getSelectedItem());
-
-            boolean success = (kereta == null) ? keretaDAO.insert(k) : keretaDAO.update(k);
-            if (success) {
-                loadData();
+        JButton btn = new JButton("Simpan");
+        btn.addActionListener(e -> {
+            Kereta ker = (k == null) ? new Kereta() : k;
+            ker.setKodeKereta(fKode.getText());
+            ker.setNamaKereta(fNama.getText());
+            if (k == null ? keretaDAO.insert(ker) : keretaDAO.update(ker)) {
+                loadKeretaData();
                 dialog.dispose();
-                JOptionPane.showMessageDialog(this, "Data berhasil disimpan!");
             }
         });
 
-        dialog.add(panel, BorderLayout.CENTER);
-        dialog.add(btnSave, BorderLayout.SOUTH);
+        dialog.add(p, BorderLayout.CENTER);
+        dialog.add(btn, BorderLayout.SOUTH);
+        dialog.setVisible(true);
+    }
+
+    // --- LOGIC KELAS ---
+    private void loadKelasData() {
+        kelasTableModel.setRowCount(0);
+        kelasKeretaDAO.getAll().forEach(k -> kelasTableModel.addRow(new Object[]{
+            k.getId(), k.getNamaKelasKereta(), k.getCreatedAt(), k.getUpdatedAt()
+        }));
+    }
+
+    private void searchKelas() {
+        kelasTableModel.setRowCount(0);
+        kelasKeretaDAO.search(txtSearchKelas.getText()).forEach(k -> kelasTableModel.addRow(new Object[]{
+            k.getId(), k.getNamaKelasKereta(), k.getCreatedAt(), k.getUpdatedAt()
+        }));
+    }
+
+    private void deleteKelas() {
+        int row = kelasTable.getSelectedRow();
+        if (row != -1) {
+            int id = (int) kelasTable.getValueAt(row, 0);
+            if (JOptionPane.showConfirmDialog(this, "Hapus data ini?", "Konfirmasi", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+                if (kelasKeretaDAO.delete(id)) {
+                    loadKelasData();
+                    JOptionPane.showMessageDialog(this, "Berhasil dihapus");
+                }
+            }
+        }
+    }
+
+    private void showKelasForm(KelasKereta k) {
+        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), k == null ? "Tambah" : "Edit", true);
+        dialog.setSize(350, 250);
+        dialog.setLocationRelativeTo(this);
+        JPanel p = new JPanel(new GridLayout(0, 1, 10, 10));
+        p.setBorder(BorderFactory.createEmptyBorder(20,20,20,20));
+
+        JTextField fNama = new JTextField(k != null ? k.getNamaKelasKereta() : "");
+
+        p.add(new JLabel("Nama Kelas:")); p.add(fNama);
+
+        JButton btn = new JButton("Simpan");
+        btn.addActionListener(e -> {
+            KelasKereta kel = (k == null) ? new KelasKereta() : k;
+            kel.setNamaKelasKereta(fNama.getText());
+            if (k == null ? kelasKeretaDAO.insert(kel) : kelasKeretaDAO.update(kel)) {
+                loadKelasData();
+                dialog.dispose();
+            }
+        });
+
+        dialog.add(p, BorderLayout.CENTER);
+        dialog.add(btn, BorderLayout.SOUTH);
         dialog.setVisible(true);
     }
 }

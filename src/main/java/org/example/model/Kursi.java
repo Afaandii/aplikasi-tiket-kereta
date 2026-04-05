@@ -5,16 +5,18 @@ import java.sql.Timestamp;
 public class Kursi {
     private int id;
     private int gerbongId;
-    private int nomorKursi;
+    private int barisKursi;
+    private String kodeKursi;
     private Timestamp createdAt;
     private Timestamp updatedAt;
 
     public Kursi() {}
 
-    public Kursi(int id, int gerbongId, int nomorKursi) {
+    public Kursi(int id, int gerbongId, int barisKursi, String kodeKursi) {
         this.id = id;
         this.gerbongId = gerbongId;
-        this.nomorKursi = nomorKursi;
+        this.barisKursi = barisKursi;
+        this.kodeKursi = kodeKursi;
     }
 
     public int getId() { return id; }
@@ -23,8 +25,11 @@ public class Kursi {
     public int getGerbongId() { return gerbongId; }
     public void setGerbongId(int gerbongId) { this.gerbongId = gerbongId; }
 
-    public int getNomorKursi() { return nomorKursi; }
-    public void setNomorKursi(int nomorKursi) { this.nomorKursi = nomorKursi; }
+    public int getBarisKursi() { return barisKursi; }
+    public void setBarisKursi(int barisKursi) { this.barisKursi = barisKursi; }
+
+    public String getKodeKursi() { return kodeKursi; }
+    public void setKodeKursi(String kodeKursi) { this.kodeKursi = kodeKursi; }
 
     public Timestamp getCreatedAt() { return createdAt; }
     public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }

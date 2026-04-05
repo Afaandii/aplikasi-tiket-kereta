@@ -5,17 +5,15 @@ import java.sql.Timestamp;
 public class KelasKereta {
     private int id;
     private String namaKelasKereta;
-    private int hargaTambahan;
     private Timestamp createdAt;
     private Timestamp updatedAt;
 
     public KelasKereta() {
     }
 
-    public KelasKereta(int id, String namaKelasKereta, int hargaTambahan) {
+    public KelasKereta(int id, String namaKelasKereta) {
         this.id = id;
         this.namaKelasKereta = namaKelasKereta;
-        this.hargaTambahan = hargaTambahan;
     }
 
     // Getters and Setters
@@ -35,13 +33,6 @@ public class KelasKereta {
         this.namaKelasKereta = namaKelasKereta;
     }
 
-    public int getHargaTambahan() {
-        return hargaTambahan;
-    }
-
-    public void setHargaTambahan(int hargaTambahan) {
-        this.hargaTambahan = hargaTambahan;
-    }
 
     public Timestamp getCreatedAt() {
         return createdAt;

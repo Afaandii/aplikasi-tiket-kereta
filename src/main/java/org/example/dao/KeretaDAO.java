@@ -21,7 +21,6 @@ public class KeretaDAO {
                 k.setId(rs.getInt("id"));
                 k.setKodeKereta(rs.getString("kode_kereta"));
                 k.setNamaKereta(rs.getString("nama_kereta"));
-                k.setTipeKereta(rs.getString("tipe_kereta"));
                 k.setCreatedAt(rs.getTimestamp("created_at"));
                 k.setUpdatedAt(rs.getTimestamp("updated_at"));
                 list.add(k);
@@ -33,13 +32,12 @@ public class KeretaDAO {
     }
 
     public boolean insert(Kereta k) {
-        String sql = "INSERT INTO kereta (kode_kereta, nama_kereta, tipe_kereta, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW())";
+        String sql = "INSERT INTO kereta (kode_kereta, nama_kereta, created_at, updated_at) VALUES (?, ?, NOW(), NOW())";
         try (Connection conn = Database.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, k.getKodeKereta());
             pstmt.setString(2, k.getNamaKereta());
-            pstmt.setString(3, k.getTipeKereta());
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -48,14 +46,13 @@ public class KeretaDAO {
     }
 
     public boolean update(Kereta k) {
-        String sql = "UPDATE kereta SET kode_kereta = ?, nama_kereta = ?, tipe_kereta = ?, updated_at = NOW() WHERE id = ?";
+        String sql = "UPDATE kereta SET kode_kereta = ?, nama_kereta = ?, updated_at = NOW() WHERE id = ?";
         try (Connection conn = Database.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, k.getKodeKereta());
             pstmt.setString(2, k.getNamaKereta());
-            pstmt.setString(3, k.getTipeKereta());
-            pstmt.setInt(4, k.getId());
+            pstmt.setInt(3, k.getId());
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -78,14 +75,13 @@ public class KeretaDAO {
 
     public List<Kereta> search(String keyword) {
         List<Kereta> list = new ArrayList<>();
-        String sql = "SELECT * FROM kereta WHERE kode_kereta LIKE ? OR nama_kereta LIKE ? OR tipe_kereta LIKE ?";
+        String sql = "SELECT * FROM kereta WHERE kode_kereta LIKE ? OR nama_kereta LIKE ?";
         try (Connection conn = Database.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             String searchTerm = "%" + keyword + "%";
             pstmt.setString(1, searchTerm);
             pstmt.setString(2, searchTerm);
-            pstmt.setString(3, searchTerm);
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
@@ -93,7 +89,6 @@ public class KeretaDAO {
                     k.setId(rs.getInt("id"));
                     k.setKodeKereta(rs.getString("kode_kereta"));
                     k.setNamaKereta(rs.getString("nama_kereta"));
-                    k.setTipeKereta(rs.getString("tipe_kereta"));
                     k.setCreatedAt(rs.getTimestamp("created_at"));
                     k.setUpdatedAt(rs.getTimestamp("updated_at"));
                     list.add(k);

@@ -6,18 +6,16 @@ public class Kereta {
     private int id;
     private String kodeKereta;
     private String namaKereta;
-    private String tipeKereta;
     private Timestamp createdAt;
     private Timestamp updatedAt;
 
     public Kereta() {
     }
 
-    public Kereta(int id, String kodeKereta, String namaKereta, String tipeKereta) {
+    public Kereta(int id, String kodeKereta, String namaKereta) {
         this.id = id;
         this.kodeKereta = kodeKereta;
         this.namaKereta = namaKereta;
-        this.tipeKereta = tipeKereta;
     }
 
     public int getId() {
@@ -44,13 +42,6 @@ public class Kereta {
         this.namaKereta = namaKereta;
     }
 
-    public String getTipeKereta() {
-        return tipeKereta;
-    }
-
-    public void setTipeKereta(String tipeKereta) {
-        this.tipeKereta = tipeKereta;
-    }
 
     public Timestamp getCreatedAt() {
         return createdAt;
