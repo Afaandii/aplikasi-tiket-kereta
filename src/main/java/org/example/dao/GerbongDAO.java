@@ -14,7 +14,7 @@ public class GerbongDAO {
         String sql = "SELECT g.*, k.nama_kereta, kk.nama_kelas_kereta as nama_kelas " +
                      "FROM gerbong g " +
                      "JOIN kereta k ON g.kereta_id = k.id " +
-                     "JOIN kelas_kereta kk ON g.kelas_kereta_id = kk.id " +
+                     "JOIN kelas_kereta kk ON g.kelas_id = kk.id " +
                      "ORDER BY g.id ASC";
 
         try (Connection conn = Database.getConnection();
@@ -25,8 +25,8 @@ public class GerbongDAO {
                 Gerbong g = new Gerbong();
                 g.setId(rs.getInt("id"));
                 g.setKeretaId(rs.getInt("kereta_id"));
-                g.setKelasKeretaId(rs.getInt("kelas_kereta_id"));
-                g.setNamaGerbong(rs.getString("nama_gerbong"));
+                g.setKelasId(rs.getInt("kelas_id"));
+                g.setNomorGerbong(rs.getString("nomor_gerbong"));
                 g.setCreatedAt(rs.getTimestamp("created_at"));
                 g.setUpdatedAt(rs.getTimestamp("updated_at"));
                 g.setNamaKereta(rs.getString("nama_kereta"));
@@ -40,13 +40,13 @@ public class GerbongDAO {
     }
 
     public int insert(Gerbong g) {
-        String sql = "INSERT INTO gerbong (kereta_id, kelas_kereta_id, nama_gerbong, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW())";
+        String sql = "INSERT INTO gerbong (kereta_id, kelas_id, nomor_gerbong, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW())";
         try (Connection conn = Database.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             pstmt.setInt(1, g.getKeretaId());
-            pstmt.setInt(2, g.getKelasKeretaId());
-            pstmt.setString(3, g.getNamaGerbong());
+            pstmt.setInt(2, g.getKelasId());
+            pstmt.setString(3, g.getNomorGerbong());
             
             int affectedRows = pstmt.executeUpdate();
             if (affectedRows > 0) {
@@ -63,13 +63,13 @@ public class GerbongDAO {
     }
 
     public boolean update(Gerbong g) {
-        String sql = "UPDATE gerbong SET kereta_id = ?, kelas_kereta_id = ?, nama_gerbong = ?, updated_at = NOW() WHERE id = ?";
+        String sql = "UPDATE gerbong SET kereta_id = ?, kelas_id = ?, nomor_gerbong = ?, updated_at = NOW() WHERE id = ?";
         try (Connection conn = Database.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setInt(1, g.getKeretaId());
-            pstmt.setInt(2, g.getKelasKeretaId());
-            pstmt.setString(3, g.getNamaGerbong());
+            pstmt.setInt(2, g.getKelasId());
+            pstmt.setString(3, g.getNomorGerbong());
             pstmt.setInt(4, g.getId());
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {

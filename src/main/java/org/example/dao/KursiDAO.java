@@ -11,7 +11,7 @@ public class KursiDAO {
 
     public List<Kursi> getByGerbongId(int gerbongId) {
         List<Kursi> list = new ArrayList<>();
-        String sql = "SELECT * FROM kursi WHERE gerbong_id = ? ORDER BY nomor_kursi ASC";
+        String sql = "SELECT * FROM kursi WHERE gerbong_id = ? ORDER BY baris_kursi ASC, kode_kursi ASC";
         try (Connection conn = Database.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
@@ -21,7 +21,10 @@ public class KursiDAO {
                     Kursi k = new Kursi();
                     k.setId(rs.getInt("id"));
                     k.setGerbongId(rs.getInt("gerbong_id"));
-                    k.setNomorKursi(rs.getInt("nomor_kursi"));
+                    k.setBarisKursi(rs.getInt("baris_kursi"));
+                    k.setKodeKursi(rs.getString("kode_kursi"));
+                    k.setCreatedAt(rs.getTimestamp("created_at"));
+                    k.setUpdatedAt(rs.getTimestamp("updated_at"));
                     list.add(k);
                 }
             }
@@ -31,15 +34,16 @@ public class KursiDAO {
         return list;
     }
 
-    public boolean insertBatch(int gerbongId, int count) {
-        String sql = "INSERT INTO kursi (gerbong_id, nomor_kursi) VALUES (?, ?)";
+    public boolean insertBatch(List<Kursi> list) {
+        String sql = "INSERT INTO kursi (gerbong_id, baris_kursi, kode_kursi, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW())";
         try (Connection conn = Database.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             conn.setAutoCommit(false);
-            for (int i = 1; i <= count; i++) {
-                pstmt.setInt(1, gerbongId);
-                pstmt.setInt(2, i);
+            for (Kursi k : list) {
+                pstmt.setInt(1, k.getGerbongId());
+                pstmt.setInt(2, k.getBarisKursi());
+                pstmt.setString(3, k.getKodeKursi());
                 pstmt.addBatch();
             }
             pstmt.executeBatch();

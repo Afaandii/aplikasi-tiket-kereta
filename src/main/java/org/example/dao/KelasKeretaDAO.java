@@ -27,12 +27,11 @@ public class KelasKeretaDAO {
     }
 
     public boolean insert(KelasKereta k) {
-        String sql = "INSERT INTO kelas_kereta (nama_kelas_kereta, harga_tambahan, created_at, updated_at) VALUES (?, ?, NOW(), NOW())";
+        String sql = "INSERT INTO kelas_kereta (nama_kelas_kereta, created_at, updated_at) VALUES (?, NOW(), NOW())";
         try (Connection conn = Database.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, k.getNamaKelasKereta());
-            pstmt.setInt(2, k.getHargaTambahan());
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -41,13 +40,12 @@ public class KelasKeretaDAO {
     }
 
     public boolean update(KelasKereta k) {
-        String sql = "UPDATE kelas_kereta SET nama_kelas_kereta = ?, harga_tambahan = ?, updated_at = NOW() WHERE id = ?";
+        String sql = "UPDATE kelas_kereta SET nama_kelas_kereta = ?, updated_at = NOW() WHERE id = ?";
         try (Connection conn = Database.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, k.getNamaKelasKereta());
-            pstmt.setInt(2, k.getHargaTambahan());
-            pstmt.setInt(3, k.getId());
+            pstmt.setInt(2, k.getId());
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -90,7 +88,6 @@ public class KelasKeretaDAO {
         KelasKereta k = new KelasKereta();
         k.setId(rs.getInt("id"));
         k.setNamaKelasKereta(rs.getString("nama_kelas_kereta"));
-        k.setHargaTambahan(rs.getInt("harga_tambahan"));
         k.setCreatedAt(rs.getTimestamp("created_at"));
         k.setUpdatedAt(rs.getTimestamp("updated_at"));
         return k;

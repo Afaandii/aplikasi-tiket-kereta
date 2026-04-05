@@ -13,6 +13,7 @@ import org.example.model.Kursi;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class GerbongManagementPanel extends JPanel {
@@ -68,7 +69,7 @@ public class GerbongManagementPanel extends JPanel {
         pnlHeaderGerbong.add(lblTitle, BorderLayout.WEST);
         pnlHeaderGerbong.add(btnAdd, BorderLayout.EAST);
 
-        String[] colsG = { "ID", "Nama Gerbong", "Kereta", "Kelas" };
+        String[] colsG = { "ID", "Nomor Gerbong", "Kereta", "Kelas", "Tanggal Dibuat" };
         modelGerbong = new DefaultTableModel(colsG, 0) {
             @Override
             public boolean isCellEditable(int r, int c) {
@@ -97,7 +98,7 @@ public class GerbongManagementPanel extends JPanel {
         lblKursiTitle.setFont(new Font("Inter", Font.BOLD, 16));
         lblKursiTitle.setForeground(new Color(180, 180, 180));
 
-        String[] colsK = { "ID", "Nomor Kursi" };
+        String[] colsK = { "ID", "Baris", "Kode Kursi" };
         modelKursi = new DefaultTableModel(colsK, 0) {
             @Override
             public boolean isCellEditable(int r, int c) {
@@ -138,7 +139,7 @@ public class GerbongManagementPanel extends JPanel {
         for (Gerbong g : list) {
             modelGerbong.addRow(new Object[] {
                     g.getId(),
-                    g.getNamaGerbong(),
+                    g.getNomorGerbong(),
                     g.getNamaKereta(),
                     g.getNamaKelas(),
                     g.getCreatedAt()
@@ -151,13 +152,13 @@ public class GerbongManagementPanel extends JPanel {
         if (row != -1) {
             int gId = (int) tableGerbong.getValueAt(row, 0);
             String name = (String) tableGerbong.getValueAt(row, 1);
-            lblKursiTitle.setText("Kursi di " + name);
+            lblKursiTitle.setText("Kursi di Gerbong: " + name);
             lblKursiTitle.setForeground(Color.WHITE);
 
             modelKursi.setRowCount(0);
             List<Kursi> list = kursiDAO.getByGerbongId(gId);
             for (Kursi k : list) {
-                modelKursi.addRow(new Object[] { k.getId(), "Kursi" + k.getNomorKursi() });
+                modelKursi.addRow(new Object[] { k.getId(), k.getBarisKursi(), k.getKodeKursi() });
             }
         } else {
             lblKursiTitle.setText("Pilih Gerbong untuk melihat kursi");
@@ -197,8 +198,8 @@ public class GerbongManagementPanel extends JPanel {
         JComboBox<ComboItem> cbKelas = new JComboBox<>();
         kelass.forEach(k -> cbKelas.addItem(new ComboItem(k.getId(), k.getNamaKelasKereta())));
 
-        JTextField fNama = new JTextField();
-        fNama.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Contoh: Eksekutif 1");
+        JTextField fNomor = new JTextField();
+        fNomor.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Contoh: Eksekutif-1");
 
         JTextField fKapasitas = new JTextField();
         fKapasitas.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Jumlah Kursi (Misal: 50)");
@@ -207,8 +208,8 @@ public class GerbongManagementPanel extends JPanel {
         pnl.add(cbKereta);
         pnl.add(new JLabel("Pilih Kelas:"));
         pnl.add(cbKelas);
-        pnl.add(new JLabel("Nama Gerbong:"));
-        pnl.add(fNama);
+        pnl.add(new JLabel("Nomor Gerbong:"));
+        pnl.add(fNomor);
         pnl.add(new JLabel("Kapasitas Kursi (Auto Generate):"));
         pnl.add(fKapasitas);
 
@@ -217,18 +218,19 @@ public class GerbongManagementPanel extends JPanel {
         btnSave.setForeground(Color.WHITE);
         btnSave.addActionListener(e -> {
             try {
-                if (fNama.getText().isEmpty() || fKapasitas.getText().isEmpty())
+                if (fNomor.getText().isEmpty() || fKapasitas.getText().isEmpty())
                     throw new Exception("Data tidak lengkap!");
 
                 Gerbong newG = new Gerbong();
                 newG.setKeretaId(((ComboItem) cbKereta.getSelectedItem()).id);
-                newG.setKelasKeretaId(((ComboItem) cbKelas.getSelectedItem()).id);
-                newG.setNamaGerbong(fNama.getText());
+                newG.setKelasId(((ComboItem) cbKelas.getSelectedItem()).id);
+                newG.setNomorGerbong(fNomor.getText());
 
                 int newId = gerbongDAO.insert(newG);
                 if (newId != -1) {
                     int cap = Integer.parseInt(fKapasitas.getText());
-                    kursiDAO.insertBatch(newId, cap);
+                    List<Kursi> listKursi = generateSeats(newId, cap);
+                    kursiDAO.insertBatch(listKursi);
                     loadGerbong();
                     dialog.dispose();
                     JOptionPane.showMessageDialog(this, "Gerbong & " + cap + " Kursi berhasil dibuat!");
@@ -241,6 +243,27 @@ public class GerbongManagementPanel extends JPanel {
         dialog.add(pnl, BorderLayout.CENTER);
         dialog.add(btnSave, BorderLayout.SOUTH);
         dialog.setVisible(true);
+    }
+
+    private List<Kursi> generateSeats(int gerbongId, int capacity) {
+        List<Kursi> list = new ArrayList<>();
+        char[] letters = {'A', 'B', 'C', 'D'};
+        int totalSeats = 0;
+        int row = 1;
+
+        while (totalSeats < capacity) {
+            for (char letter : letters) {
+                if (totalSeats >= capacity) break;
+                Kursi k = new Kursi();
+                k.setGerbongId(gerbongId);
+                k.setBarisKursi(row);
+                k.setKodeKursi(row + String.valueOf(letter));
+                list.add(k);
+                totalSeats++;
+            }
+            row++;
+        }
+        return list;
     }
 
     private static class ComboItem {
