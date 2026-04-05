@@ -10,9 +10,11 @@ public class DashboardAdmin extends JFrame {
     private final User currentUser;
     private CardLayout cardLayout;
     private JPanel mainContent;
+    private final org.example.dao.DashboardDAO dashboardDAO;
 
     public DashboardAdmin(User user) {
         this.currentUser = user;
+        this.dashboardDAO = new org.example.dao.DashboardDAO();
         initComponents();
     }
 
@@ -148,16 +150,27 @@ public class DashboardAdmin extends JFrame {
         JPanel grid = new JPanel(new GridLayout(0, 3, 20, 20));
         grid.setOpaque(false);
 
-        grid.add(createStatCard("Total Stasiun", "12", new Color(36, 123, 222)));
-        grid.add(createStatCard("Total Kereta", "8", new Color(76, 175, 80)));
-        grid.add(createStatCard("Total Jadwal", "45", new Color(156, 39, 176)));
-        grid.add(createStatCard("Total Gerbong", "120", new Color(244, 67, 54)));
-        grid.add(createStatCard("Total Users", "25", new Color(255, 152, 0)));
-        grid.add(createStatCard("Total Pendapatan", "Rp 24,5 jt", new Color(0, 188, 212)));
+        java.util.Map<String, Object> stats = dashboardDAO.getSummaryStats();
+
+        grid.add(createStatCard("Total Stasiun", String.valueOf(stats.get("total_stasiun")), new Color(36, 123, 222)));
+        grid.add(createStatCard("Total Kereta", String.valueOf(stats.get("total_kereta")), new Color(76, 175, 80)));
+        grid.add(createStatCard("Total Jadwal", String.valueOf(stats.get("total_jadwal")), new Color(156, 39, 176)));
+        grid.add(createStatCard("Total Gerbong", String.valueOf(stats.get("total_gerbong")), new Color(244, 67, 54)));
+        grid.add(createStatCard("Total Users", String.valueOf(stats.get("total_user")), new Color(255, 152, 0)));
+        grid.add(createStatCard("Total Pendapatan", formatCurrency((long) stats.get("total_pendapatan")), new Color(0, 188, 212)));
 
         p.add(lblHeading, BorderLayout.NORTH);
         p.add(grid, BorderLayout.CENTER);
         return p;
+    }
+
+    private String formatCurrency(long amount) {
+        if (amount >= 1_000_000) {
+            return String.format("Rp %.1f jt", (double) amount / 1_000_000).replace(".0", "");
+        } else if (amount >= 1_000) {
+            return String.format("Rp %.1f rb", (double) amount / 1_000).replace(".0", "");
+        }
+        return "Rp " + amount;
     }
 
     private JPanel createStatCard(String label, String value, Color accentColor) {
