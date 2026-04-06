@@ -164,8 +164,9 @@ public class LoginForm extends JFrame {
                 JOptionPane.showMessageDialog(this, "Welcome Cashier, " + user.getUsername() + "!",
                         "Authentication Success",
                         JOptionPane.INFORMATION_MESSAGE);
-                // Future: new DashboardCashier(user).setVisible(true);
-                // this.dispose();
+                DashboardKasir dashboard = new DashboardKasir(user);
+                dashboard.setVisible(true);
+                this.dispose();
             } else {
                 JOptionPane.showMessageDialog(this, "Invalid Role assigned to this user.", "Error",
                         JOptionPane.ERROR_MESSAGE);

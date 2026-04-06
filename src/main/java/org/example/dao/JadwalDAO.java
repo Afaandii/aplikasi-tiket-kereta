@@ -31,6 +31,33 @@ public class JadwalDAO {
         return list;
     }
 
+    public List<Jadwal> getByRoute(int asalId, int tujuanId) {
+        List<Jadwal> list = new ArrayList<>();
+        String sql = "SELECT j.*, k.nama_kereta, s1.nama_stasiun as nama_asal, s2.nama_stasiun as nama_tujuan " +
+                     "FROM jadwal j " +
+                     "JOIN kereta k ON j.kereta_id = k.id " +
+                     "JOIN stasiun s1 ON j.stasiun_asal_id = s1.id " +
+                     "JOIN stasiun s2 ON j.stasiun_tujuan_id = s2.id " +
+                     "WHERE j.stasiun_asal_id = ? AND j.stasiun_tujuan_id = ? AND j.status = 'Aktif' " +
+                     "ORDER BY j.waktu_berangkat ASC";
+
+        try (Connection conn = Database.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, asalId);
+            pstmt.setInt(2, tujuanId);
+            
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapResultSetToJadwal(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     public List<Jadwal> search(String keyword) {
         List<Jadwal> list = new ArrayList<>();
         String sql = "SELECT j.*, k.nama_kereta, s1.nama_stasiun as nama_asal, s2.nama_stasiun as nama_tujuan " +
