@@ -49,7 +49,7 @@ public class TransaksiDAO {
                     // Save Detail
                     pstmtD.setInt(1, transaksiId);
                     pstmtD.setInt(2, dt.getJadwalKursiId());
-                    pstmtD.setInt(3, dt.getHarga());
+                    pstmtD.setString(3, String.valueOf(dt.getHarga())); // Changed to String to match VARCHAR column
                     pstmtD.addBatch();
 
                     // Update Seat
@@ -63,10 +63,45 @@ public class TransaksiDAO {
             conn.commit();
             return true;
         } catch (SQLException e) {
+            try {
+                java.nio.file.Files.writeString(java.nio.file.Path.of("error_log.txt"), 
+                    "\n--- DATABASE ERROR REPORT ---\n" +
+                    "Time: " + new java.util.Date() + "\n" +
+                    "Error: " + e.getMessage() + "\n\n", 
+                    java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.APPEND);
+                
+                // Diagnostic: Check 'transaksi' structure
+                try (Statement stmt = conn.createStatement();
+                     ResultSet rs = stmt.executeQuery("DESCRIBE transaksi")) {
+                    java.nio.file.Files.writeString(java.nio.file.Path.of("error_log.txt"), "Table: transaksi\n", java.nio.file.StandardOpenOption.APPEND);
+                    while(rs.next()) {
+                        java.nio.file.Files.writeString(java.nio.file.Path.of("error_log.txt"), 
+                            String.format("- %s (%s)\n", rs.getString("Field"), rs.getString("Type")), 
+                            java.nio.file.StandardOpenOption.APPEND);
+                    }
+                }
+                
+                // Diagnostic: Check 'jadwal_kursi' structure
+                try (Statement stmt = conn.createStatement();
+                     ResultSet rs = stmt.executeQuery("DESCRIBE jadwal_kursi")) {
+                    java.nio.file.Files.writeString(java.nio.file.Path.of("error_log.txt"), "\nTable: jadwal_kursi\n", java.nio.file.StandardOpenOption.APPEND);
+                    while(rs.next()) {
+                        java.nio.file.Files.writeString(java.nio.file.Path.of("error_log.txt"), 
+                            String.format("- %s (%s)\n", rs.getString("Field"), rs.getString("Type")), 
+                            java.nio.file.StandardOpenOption.APPEND);
+                    }
+                }
+
+                try (java.io.PrintWriter pw = new java.io.PrintWriter(new java.io.FileWriter("error_log.txt", true))) {
+                    e.printStackTrace(pw);
+                }
+            } catch (java.io.IOException | SQLException logEx) {
+                logEx.printStackTrace();
+            }
+            
             if (conn != null) {
                 try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
             }
-            e.printStackTrace();
             return false;
         } finally {
             if (conn != null) {

@@ -25,7 +25,7 @@ public class BookingPanel extends JPanel {
     private JComboBox<ComboItem> cbAsal, cbTujuan;
     private JPanel seatMapPanel;
     private JLabel lblSelectedSeats, lblTotalPrice;
-    
+
     private List<JadwalKursi> selectedSeats = new ArrayList<>();
     private Jadwal selectedJadwal = null;
     private int ticketPrice = 0;
@@ -50,7 +50,7 @@ public class BookingPanel extends JPanel {
         // --- TOP: SEARCH ---
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
         searchPanel.setOpaque(false);
-        
+
         cbAsal = new JComboBox<>();
         cbTujuan = new JComboBox<>();
         JButton btnSearch = new JButton("Cari Jadwal");
@@ -58,8 +58,10 @@ public class BookingPanel extends JPanel {
         btnSearch.setForeground(Color.WHITE);
         btnSearch.addActionListener(e -> searchJadwal());
 
-        searchPanel.add(new JLabel("Asal:")); searchPanel.add(cbAsal);
-        searchPanel.add(new JLabel("Tujuan:")); searchPanel.add(cbTujuan);
+        searchPanel.add(new JLabel("Asal:"));
+        searchPanel.add(cbAsal);
+        searchPanel.add(new JLabel("Tujuan:"));
+        searchPanel.add(cbTujuan);
         searchPanel.add(btnSearch);
 
         // --- CENTER: SPLIT PANE ---
@@ -72,12 +74,17 @@ public class BookingPanel extends JPanel {
         leftPanel.setOpaque(false);
         leftPanel.setBorder(BorderFactory.createTitledBorder("Pilih Jadwal"));
 
-        String[] cols = {"ID", "Kereta", "Waktu Berangkat", "Status"};
-        modelJadwal = new DefaultTableModel(cols, 0) { public boolean isCellEditable(int r, int c) { return false; } };
+        String[] cols = { "ID", "Kereta", "Waktu Berangkat", "Status" };
+        modelJadwal = new DefaultTableModel(cols, 0) {
+            public boolean isCellEditable(int r, int c) {
+                return false;
+            }
+        };
         tblJadwal = new JTable(modelJadwal);
         setupTable(tblJadwal);
         tblJadwal.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) selectJadwal();
+            if (!e.getValueIsAdjusting())
+                selectJadwal();
         });
         leftPanel.add(new JScrollPane(tblJadwal), BorderLayout.CENTER);
 
@@ -95,7 +102,7 @@ public class BookingPanel extends JPanel {
         JPanel checkoutInfo = new JPanel(new GridLayout(0, 1, 5, 5));
         checkoutInfo.setOpaque(false);
         checkoutInfo.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
-        
+
         lblSelectedSeats = new JLabel("Kursi Terpilih: -");
         lblSelectedSeats.setFont(new Font("Inter", Font.BOLD, 14));
         lblSelectedSeats.setForeground(Color.WHITE);
@@ -146,23 +153,24 @@ public class BookingPanel extends JPanel {
     private void searchJadwal() {
         modelJadwal.setRowCount(0);
         resetSelections();
-        
+
         Object a = cbAsal.getSelectedItem();
         Object t = cbTujuan.getSelectedItem();
-        
-        if (a == null || t == null) return;
+
+        if (a == null || t == null)
+            return;
 
         int asalId = ((ComboItem) a).id;
         int tujuanId = ((ComboItem) t).id;
-        
+
         List<Jadwal> results = jadwalDAO.getByRoute(asalId, tujuanId);
         if (results.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Tidak ada jadwal aktif untuk rute ini.");
             return;
         }
 
-        results.forEach(j -> modelJadwal.addRow(new Object[]{
-            j.getId(), j.getNamaKereta(), j.getWaktuBerangkat(), j.getStatus()
+        results.forEach(j -> modelJadwal.addRow(new Object[] {
+                j.getId(), j.getNamaKereta(), j.getWaktuBerangkat(), j.getStatus()
         }));
     }
 
@@ -171,7 +179,7 @@ public class BookingPanel extends JPanel {
         if (row != -1) {
             int id = (int) tblJadwal.getValueAt(row, 0);
             selectedJadwal = jadwalDAO.getAll().stream().filter(j -> j.getId() == id).findFirst().orElse(null);
-            
+
             // Get price (assume first class found for simplicity, or add class selection)
             List<JadwalHarga> prices = hargaDAO.getByJadwalId(id);
             if (!prices.isEmpty()) {
@@ -180,7 +188,7 @@ public class BookingPanel extends JPanel {
                 ticketPrice = 0;
                 JOptionPane.showMessageDialog(this, "Harga untuk jadwal ini belum diatur!");
             }
-            
+
             loadSeatMap(id);
             resetSelections();
         }
@@ -189,7 +197,7 @@ public class BookingPanel extends JPanel {
     private void loadSeatMap(int jadwalId) {
         seatMapPanel.removeAll();
         List<JadwalKursi> list = kursiDAO.getByJadwalId(jadwalId);
-        
+
         for (JadwalKursi k : list) {
             JButton btnSeat = new JButton(k.getKodeKursi());
             btnSeat.setPreferredSize(new Dimension(60, 60));
@@ -232,7 +240,8 @@ public class BookingPanel extends JPanel {
                 sb.append(selectedSeats.get(i).getKodeKursi()).append(i == selectedSeats.size() - 1 ? "" : ", ");
             }
             lblSelectedSeats.setText(sb.toString());
-            lblTotalPrice.setText("Total Harga: Rp " + String.format("%, d", (long) selectedSeats.size() * ticketPrice));
+            lblTotalPrice
+                    .setText("Total Harga: Rp " + String.format("%, d", (long) selectedSeats.size() * ticketPrice));
         }
     }
 
@@ -254,10 +263,12 @@ public class BookingPanel extends JPanel {
         p.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
 
         JTextField fNama = new JTextField();
-        JComboBox<String> cbMetode = new JComboBox<>(new String[]{"Tunai", "QRIS", "Debit"});
+        JComboBox<String> cbMetode = new JComboBox<>(new String[] { "Tunai", "QRIS", "Debit" });
 
-        p.add(new JLabel("Nama Penumpang:")); p.add(fNama);
-        p.add(new JLabel("Metode Pembayaran:")); p.add(cbMetode);
+        p.add(new JLabel("Nama Penumpang:"));
+        p.add(fNama);
+        p.add(new JLabel("Metode Pembayaran:"));
+        p.add(cbMetode);
         p.add(new JLabel("Total yang harus dibayar:"));
         JLabel lblFinalTotal = new JLabel("Rp " + String.format("%, d", (long) selectedSeats.size() * ticketPrice));
         lblFinalTotal.setFont(new Font("Inter", Font.BOLD, 24));
@@ -273,12 +284,18 @@ public class BookingPanel extends JPanel {
 
             Transaksi t = new Transaksi();
             t.setUserId(currentUser.getId());
-            t.setKodeTransaksi("TRX-" + System.currentTimeMillis());
-            t.setKodeBooking(UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+
+            // Format: TRX-[timestamp_last_6_digits]
+            String timePart = String.valueOf(System.currentTimeMillis());
+            t.setKodeTransaksi("TRX-" + timePart.substring(timePart.length() - 8));
+
+            // Format: BKG-[UUID_first_6_chars]
+            t.setKodeBooking("BKG-" + UUID.randomUUID().toString().substring(0, 6).toUpperCase());
+
             t.setNamaCustomer(fNama.getText());
             t.setTotalBayar((long) selectedSeats.size() * ticketPrice);
             t.setJumlahTiket(selectedSeats.size());
-            t.setStatus("Lunas");
+            t.setStatus("paid");
             t.setMetodePembayaran(cbMetode.getSelectedItem().toString());
 
             List<DetailTransaksi> details = new ArrayList<>();
@@ -295,13 +312,14 @@ public class BookingPanel extends JPanel {
                 loadSeatMap(selectedJadwal.getId());
                 resetSelections();
             } else {
-                JOptionPane.showMessageDialog(dialog, "Gagal memproses transaksi!");
+                JOptionPane.showMessageDialog(dialog, "Gagal memproses transaksi! Silakan periksa database/konsol untuk detail.");
             }
         });
 
         dialog.add(p, BorderLayout.CENTER);
         dialog.add(btnFinal, BorderLayout.SOUTH);
         dialog.setVisible(true);
+                        
     }
 
     private static class ComboItem {
@@ -310,3 +328,14 @@ public class BookingPanel extends JPanel {
         public String toString() { return name; }
     }
 }
+
+        
+
+        
+            
+            
+        
+
+        
+            
+        
