@@ -136,4 +136,50 @@ public class TransaksiDAO {
         }
         return list;
     }
+
+    public List<Transaksi> getFilteredTransactions(int userId, String startDate, String endDate, String method) {
+        List<Transaksi> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("SELECT * FROM transaksi WHERE user_id = ?");
+
+        if (startDate != null && !startDate.isEmpty())
+            sql.append(" AND DATE(created_at) >= ?");
+        if (endDate != null && !endDate.isEmpty())
+            sql.append(" AND DATE(created_at) <= ?");
+        if (method != null && !method.equals("Semua"))
+            sql.append(" AND metode_pembayaran = ?");
+
+        sql.append(" ORDER BY created_at DESC");
+
+        try (Connection conn = Database.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql.toString())) {
+
+            int paramIdx = 1;
+            pstmt.setInt(paramIdx++, userId);
+            if (startDate != null && !startDate.isEmpty())
+                pstmt.setString(paramIdx++, startDate);
+            if (endDate != null && !endDate.isEmpty())
+                pstmt.setString(paramIdx++, endDate);
+            if (method != null && !method.equals("Semua"))
+                pstmt.setString(paramIdx++, method);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    Transaksi t = new Transaksi();
+                    t.setId(rs.getInt("id"));
+                    t.setKodeTransaksi(rs.getString("kode_transaksi"));
+                    t.setKodeBooking(rs.getString("kode_booking"));
+                    t.setNamaCustomer(rs.getString("nama_customer"));
+                    t.setTotalBayar(rs.getLong("total_bayar"));
+                    t.setJumlahTiket(rs.getInt("jumlah_tiket"));
+                    t.setStatus(rs.getString("status"));
+                    t.setMetodePembayaran(rs.getString("metode_pembayaran"));
+                    t.setCreatedAt(rs.getTimestamp("created_at"));
+                    list.add(t);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
 }
