@@ -204,7 +204,7 @@ public class BookingPanel extends JPanel {
             btnSeat.setFont(new Font("Inter", Font.BOLD, 12));
             btnSeat.putClientProperty(FlatClientProperties.STYLE, "arc: 10");
 
-            if (k.getStatus().equals("Terisi")) {
+            if (k.getStatus().equalsIgnoreCase("dipesan")) {
                 btnSeat.setBackground(new Color(80, 80, 80));
                 btnSeat.setForeground(new Color(150, 150, 150));
                 btnSeat.setEnabled(false);
