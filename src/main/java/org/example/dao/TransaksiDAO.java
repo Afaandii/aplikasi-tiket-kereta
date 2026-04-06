@@ -137,24 +137,30 @@ public class TransaksiDAO {
         return list;
     }
 
-    public List<Transaksi> getFilteredTransactions(int userId, String startDate, String endDate, String method) {
+    public List<Transaksi> getFilteredTransactions(Integer userId, String startDate, String endDate, String method) {
         List<Transaksi> list = new ArrayList<>();
-        StringBuilder sql = new StringBuilder("SELECT * FROM transaksi WHERE user_id = ?");
+        StringBuilder sql = new StringBuilder(
+                "SELECT t.*, u.username FROM transaksi t " +
+                        "JOIN user u ON t.user_id = u.id " +
+                        "WHERE 1=1");
 
+        if (userId != null && userId != 0)
+            sql.append(" AND t.user_id = ?");
         if (startDate != null && !startDate.isEmpty())
-            sql.append(" AND DATE(created_at) >= ?");
+            sql.append(" AND DATE(t.created_at) >= ?");
         if (endDate != null && !endDate.isEmpty())
-            sql.append(" AND DATE(created_at) <= ?");
+            sql.append(" AND DATE(t.created_at) <= ?");
         if (method != null && !method.equals("Semua"))
-            sql.append(" AND metode_pembayaran = ?");
+            sql.append(" AND t.metode_pembayaran = ?");
 
-        sql.append(" ORDER BY created_at DESC");
+        sql.append(" ORDER BY t.created_at DESC");
 
         try (Connection conn = Database.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql.toString())) {
 
             int paramIdx = 1;
-            pstmt.setInt(paramIdx++, userId);
+            if (userId != null && userId != 0)
+                pstmt.setInt(paramIdx++, userId);
             if (startDate != null && !startDate.isEmpty())
                 pstmt.setString(paramIdx++, startDate);
             if (endDate != null && !endDate.isEmpty())
@@ -166,6 +172,8 @@ public class TransaksiDAO {
                 while (rs.next()) {
                     Transaksi t = new Transaksi();
                     t.setId(rs.getInt("id"));
+                    t.setUserId(rs.getInt("user_id"));
+                    t.setUsername(rs.getString("username"));
                     t.setKodeTransaksi(rs.getString("kode_transaksi"));
                     t.setKodeBooking(rs.getString("kode_booking"));
                     t.setNamaCustomer(rs.getString("nama_customer"));

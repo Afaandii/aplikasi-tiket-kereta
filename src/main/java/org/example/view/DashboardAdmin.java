@@ -42,7 +42,7 @@ public class DashboardAdmin extends JFrame {
         mainContent.add(new GerbongManagementPanel(), "Gerbong");
         mainContent.add(new JadwalManagementPanel(), "Jadwal");
         mainContent.add(new UserManagementPanel(), "User");
-        mainContent.add(createPlaceholderPanel("Laporan Keuangan"), "Laporan");
+        mainContent.add(new LaporanAdminPanel(), "Laporan");
 
         // Layout Assembly
         JPanel rightPanel = new JPanel(new BorderLayout());
@@ -199,16 +199,6 @@ public class DashboardAdmin extends JFrame {
         card.add(lblValue, BorderLayout.SOUTH);
 
         return card;
-    }
-
-    private JPanel createPlaceholderPanel(String title) {
-        JPanel p = new JPanel(new GridBagLayout());
-        p.setBackground(new Color(30, 31, 34));
-        JLabel l = new JLabel(title);
-        l.setFont(new Font("Inter", Font.BOLD, 30));
-        l.setForeground(new Color(100, 100, 100));
-        p.add(l);
-        return p;
     }
 
     private void logout() {

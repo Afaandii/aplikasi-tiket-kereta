@@ -78,6 +78,25 @@ public class UserDAO {
         return list;
     }
 
+    public java.util.List<User> getByRoleId(int roleId) {
+        java.util.List<User> list = new java.util.ArrayList<>();
+        String sql = "SELECT u.*, r.nama_role as role_name FROM user u JOIN role r ON u.role_id = r.id WHERE u.role_id = ? ORDER BY u.id ASC";
+        try (Connection conn = Database.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, roleId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    User u = mapResultSetToUser(rs);
+                    u.setRoleName(rs.getString("role_name"));
+                    list.add(u);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     public boolean insert(User u) {
         String sql = "INSERT INTO user (role_id, username, email, password, created_at, updated_at) VALUES (?, ?, ?, ?, NOW(), NOW())";
         try (Connection conn = Database.getConnection();

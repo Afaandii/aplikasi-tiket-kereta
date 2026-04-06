@@ -81,7 +81,7 @@ public class LoadingScreen extends JWindow {
         progressBar.putClientProperty(FlatClientProperties.STYLE, "" +
                 "arc: 20;" +
                 "height: 6;" +
-                "background: rgba(0,0,0,0.3);" +
+                "background: #111111;" +
                 "foreground: rgb(36, 123, 222);" +
                 "paintOutsideClip: true");
         
