@@ -40,7 +40,7 @@ public class TransaksiDAO {
 
             // 2. Insert Details & Update Seat Status
             String sqlD = "INSERT INTO detail_transaksi (transaksi_id, jadwal_kursi_id, harga, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW())";
-            String sqlS = "UPDATE jadwal_kursi SET status = 'Terisi', updated_at = NOW() WHERE id = ?";
+            String sqlS = "UPDATE jadwal_kursi SET status = 'dipesan', updated_at = NOW() WHERE id = ?";
             
             try (PreparedStatement pstmtD = conn.prepareStatement(sqlD);
                  PreparedStatement pstmtS = conn.prepareStatement(sqlS)) {

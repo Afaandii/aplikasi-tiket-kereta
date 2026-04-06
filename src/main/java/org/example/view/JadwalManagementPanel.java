@@ -206,7 +206,7 @@ public class JadwalManagementPanel extends JPanel {
         JPanel bottom = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
         bottom.setOpaque(false);
 
-        JButton btnUpdateStatus = new JButton("Ubah Status (Tersedia/Terisi)");
+        JButton btnUpdateStatus = new JButton("Ubah Status (Tersedia/Dipesan)");
         btnUpdateStatus.setBackground(new Color(76, 175, 80));
         btnUpdateStatus.setForeground(Color.WHITE);
         btnUpdateStatus.addActionListener(e -> updateKursiStatus());
@@ -426,7 +426,7 @@ public class JadwalManagementPanel extends JPanel {
         if (row != -1) {
             int id = (int) tblKursi.getValueAt(row, 0);
             String currentStatus = (String) tblKursi.getValueAt(row, 3);
-            String newStatus = currentStatus.equals("Tersedia") ? "Terisi" : "Tersedia";
+            String newStatus = currentStatus.equalsIgnoreCase("tersedia") ? "dipesan" : "tersedia";
             if (kursiDAO.updateStatus(id, newStatus)) {
                 loadKursi();
             }

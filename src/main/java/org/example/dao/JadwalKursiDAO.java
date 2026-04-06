@@ -72,7 +72,7 @@ public class JadwalKursiDAO {
     public boolean initializeSeats(int jadwalId, int keretaId) {
         // First get all seats for this train's carriages
         String sql = "INSERT INTO jadwal_kursi (jadwal_id, kursi_id, status, created_at, updated_at) " +
-                     "SELECT ?, k.id, 'Tersedia', NOW(), NOW() " +
+                     "SELECT ?, k.id, 'tersedia', NOW(), NOW() " +
                      "FROM kursi k " +
                      "JOIN gerbong g ON k.gerbong_id = g.id " +
                      "WHERE g.kereta_id = ?";
