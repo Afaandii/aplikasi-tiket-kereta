@@ -276,11 +276,40 @@ public class JadwalManagementPanel extends JPanel {
         JComboBox<ComboItem> cbKereta = new JComboBox<>();
         keretaDAO.getAll().forEach(k -> cbKereta.addItem(new ComboItem(k.getId(), k.getNamaKereta())));
 
-        JComboBox<ComboItem> cbAsal = new JComboBox<>();
-        stasiunDAO.getAll().forEach(s -> cbAsal.addItem(new ComboItem(s.getId(), s.getNamaStasiun())));
+        int gubengId = -1;
+        String asalName = "Stasiun Gubeng";
+        java.util.List<Stasiun> allStasiun = stasiunDAO.getAll();
+        for (Stasiun s : allStasiun) {
+            if (s.getNamaStasiun().equalsIgnoreCase("Stasiun Gubeng")) {
+                gubengId = s.getId();
+            }
+            if (j != null && s.getId() == j.getStasiunAsalId()) {
+                asalName = s.getNamaStasiun();
+            }
+        }
+        final int finalAsalId = (j != null) ? j.getStasiunAsalId() : gubengId;
+        
+        JTextField textAsal = new JTextField(asalName);
+        textAsal.setEnabled(false);
+        textAsal.setDisabledTextColor(Color.GRAY);
 
         JComboBox<ComboItem> cbTujuan = new JComboBox<>();
-        stasiunDAO.getAll().forEach(s -> cbTujuan.addItem(new ComboItem(s.getId(), s.getNamaStasiun())));
+        allStasiun.forEach(s -> cbTujuan.addItem(new ComboItem(s.getId(), s.getNamaStasiun())));
+
+        if (j != null) {
+            for (int i = 0; i < cbKereta.getItemCount(); i++) {
+                if (cbKereta.getItemAt(i).id == j.getKeretaId()) {
+                    cbKereta.setSelectedIndex(i);
+                    break;
+                }
+            }
+            for (int i = 0; i < cbTujuan.getItemCount(); i++) {
+                if (cbTujuan.getItemAt(i).id == j.getStasiunTujuanId()) {
+                    cbTujuan.setSelectedIndex(i);
+                    break;
+                }
+            }
+        }
 
         JTextField fBerangkat = new JTextField(j != null ? j.getWaktuBerangkat().toString() : "2024-01-01 08:00:00");
         JTextField fTiba = new JTextField(j != null ? j.getWaktuTiba().toString() : "2024-01-01 10:00:00");
@@ -292,7 +321,7 @@ public class JadwalManagementPanel extends JPanel {
         p.add(new JLabel("Kereta:"));
         p.add(cbKereta);
         p.add(new JLabel("Stasiun Asal:"));
-        p.add(cbAsal);
+        p.add(textAsal);
         p.add(new JLabel("Stasiun Tujuan:"));
         p.add(cbTujuan);
         p.add(new JLabel("Waktu Berangkat (YYYY-MM-DD HH:MM:SS):"));
@@ -307,7 +336,7 @@ public class JadwalManagementPanel extends JPanel {
             try {
                 Jadwal jadwal = (j == null) ? new Jadwal() : j;
                 jadwal.setKeretaId(((ComboItem) cbKereta.getSelectedItem()).id);
-                jadwal.setStasiunAsalId(((ComboItem) cbAsal.getSelectedItem()).id);
+                jadwal.setStasiunAsalId(finalAsalId);
                 jadwal.setStasiunTujuanId(((ComboItem) cbTujuan.getSelectedItem()).id);
                 jadwal.setWaktuBerangkat(Timestamp.valueOf(fBerangkat.getText()));
                 jadwal.setWaktuTiba(Timestamp.valueOf(fTiba.getText()));

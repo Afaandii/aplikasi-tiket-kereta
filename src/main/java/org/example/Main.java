@@ -10,7 +10,7 @@ public class Main {
     public static void main(String[] args) {
         // Mengatur Tema Modern (Dark) dengan Accent Color
         FlatDarkLaf.setup();
-        
+
         // Custom Global Styling
         UIManager.put("Button.arc", 15);
         UIManager.put("Component.arc", 15);

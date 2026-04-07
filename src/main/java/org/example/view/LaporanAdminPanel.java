@@ -86,7 +86,7 @@ public class LaporanAdminPanel extends JPanel {
         cbKasir.addActionListener(e -> loadLaporan());
 
         // Metode Filter
-        cbMetode = new JComboBox<>(new String[] { "Semua", "Tunai", "QRIS", "Debit" });
+        cbMetode = new JComboBox<>(new String[] { "Semua", "Tunai", "QRIS" });
         cbMetode.addActionListener(e -> loadLaporan());
 
         filterBar.add(new JLabel("Dari Tanggal:"));
@@ -142,15 +142,17 @@ public class LaporanAdminPanel extends JPanel {
         DefaultTableCellRenderer center = new DefaultTableCellRenderer();
         center.setHorizontalAlignment(JLabel.CENTER);
         table.setDefaultRenderer(Object.class, center);
-        
+
         // Adjust column widths
         table.getColumnModel().getColumn(0).setPreferredWidth(50);
         table.getColumnModel().getColumn(5).setPreferredWidth(60);
     }
 
     private JLabel createStatLabel(String title, String value, Color color) {
-        JLabel l = new JLabel("<html><div style='text-align:center;'><b>" + title + "</b><br><span style='font-size:24px; color:rgb("
-                + color.getRed() + "," + color.getGreen() + "," + color.getBlue() + ");'>" + value + "</span></div></html>");
+        JLabel l = new JLabel(
+                "<html><div style='text-align:center;'><b>" + title + "</b><br><span style='font-size:24px; color:rgb("
+                        + color.getRed() + "," + color.getGreen() + "," + color.getBlue() + ");'>" + value
+                        + "</span></div></html>");
         l.setHorizontalAlignment(SwingConstants.CENTER);
         l.setOpaque(true);
         l.setBackground(new Color(43, 45, 48));
@@ -161,15 +163,19 @@ public class LaporanAdminPanel extends JPanel {
 
     private void loadLaporan() {
         modelLaporan.setRowCount(0);
-        String start = txtStartDate.getText();
-        String end = txtEndDate.getText();
+        String start = txtStartDate.getText() != null ? txtStartDate.getText().trim() : "";
+        String end = txtEndDate.getText() != null ? txtEndDate.getText().trim() : "";
+
+        // Pastikan hanya mem-parsing jika formatnya adalah YYYY-MM-DD
+        if (!start.matches("\\d{4}-\\d{2}-\\d{2}")) start = "";
+        if (!end.matches("\\d{4}-\\d{2}-\\d{2}")) end = "";
+
         String method = cbMetode.getSelectedItem().toString();
         ComboItem selectedKasir = (ComboItem) cbKasir.getSelectedItem();
 
         List<Transaksi> list = transaksiDAO.getFilteredTransactions(
-            selectedKasir != null ? selectedKasir.id : 0, 
-            start, end, method
-        );
+                selectedKasir != null ? selectedKasir.id : 0,
+                start, end, method);
 
         long totalOmzet = 0;
         int totalTiket = 0;
@@ -184,15 +190,19 @@ public class LaporanAdminPanel extends JPanel {
             totalTiket += t.getJumlahTiket();
         }
 
-        // Profit Assumption: 100% since no cost is provided, or we can use a placeholder percentage
+        // Profit Assumption: 100% since no cost is provided, or we can use a
+        // placeholder percentage
         long totalLaba = totalOmzet; // Defaulting to 100% of revenue as profit (service industry)
 
-        lblTotalTiket.setText("<html><div style='text-align:center;'><b>Total Tiket Terjual</b><br><span style='font-size:24px; color:#247BDE;'>"
-                + totalTiket + " Tiket</span></div></html>");
-        lblTotalOmzet.setText("<html><div style='text-align:center;'><b>Total Omzet</b><br><span style='font-size:24px; color:#4CAF50;'>Rp "
-                + String.format("%, d", totalOmzet) + "</span></div></html>");
-        lblTotalLaba.setText("<html><div style='text-align:center;'><b>Estimasi Laba</b><br><span style='font-size:24px; color:#9C27B0;'>Rp "
-                + String.format("%, d", totalLaba) + "</span></div></html>");
+        lblTotalTiket.setText(
+                "<html><div style='text-align:center;'><b>Total Tiket Terjual</b><br><span style='font-size:24px; color:#247BDE;'>"
+                        + totalTiket + " Tiket</span></div></html>");
+        lblTotalOmzet.setText(
+                "<html><div style='text-align:center;'><b>Total Omzet</b><br><span style='font-size:24px; color:#4CAF50;'>Rp "
+                        + String.format("%, d", totalOmzet) + "</span></div></html>");
+        lblTotalLaba.setText(
+                "<html><div style='text-align:center;'><b>Estimasi Laba</b><br><span style='font-size:24px; color:#9C27B0;'>Rp "
+                        + String.format("%, d", totalLaba) + "</span></div></html>");
     }
 
     private static class ComboItem {

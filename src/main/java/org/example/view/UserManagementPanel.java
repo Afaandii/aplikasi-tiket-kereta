@@ -142,6 +142,7 @@ public class UserManagementPanel extends JPanel {
         tableModel.setRowCount(0);
         List<User> list = userDAO.getAll();
         for (User u : list) {
+            if (u.getRoleId() == 1) continue;
             tableModel.addRow(new Object[]{
                 u.getId(),
                 u.getUsername(),
@@ -157,6 +158,7 @@ public class UserManagementPanel extends JPanel {
         tableModel.setRowCount(0);
         List<User> list = userDAO.search(keyword);
         for (User u : list) {
+            if (u.getRoleId() == 1) continue;
             tableModel.addRow(new Object[]{
                 u.getId(),
                 u.getUsername(),
@@ -200,7 +202,7 @@ public class UserManagementPanel extends JPanel {
         
         List<Role> roles = roleDAO.getAll();
         JComboBox<Role> cbRole = new JComboBox<>();
-        roles.forEach(cbRole::addItem);
+        roles.stream().filter(r -> r.getId() != 1).forEach(cbRole::addItem);
 
         if (user != null) {
             fUsername.setText(user.getUsername());
