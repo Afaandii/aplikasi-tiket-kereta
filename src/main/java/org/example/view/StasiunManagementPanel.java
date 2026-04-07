@@ -32,7 +32,7 @@ public class StasiunManagementPanel extends JPanel {
         headerPanel.setOpaque(false);
         headerPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
 
-        JLabel lblTitle = new JLabel("Kelola Data Stasiun");
+        JLabel lblTitle = new JLabel("Kelola Data Stasiun Tujuan");
         lblTitle.setFont(new Font("Inter", Font.BOLD, 24));
         lblTitle.setForeground(Color.WHITE);
 
@@ -67,7 +67,7 @@ public class StasiunManagementPanel extends JPanel {
         headerPanel.add(actionPanel, BorderLayout.EAST);
 
         // Table Section
-        String[] columns = {"ID", "Kode Stasiun", "Nama Stasiun", "Kota", "Terakhir Diupdate"};
+        String[] columns = { "ID", "Kode Stasiun", "Nama Stasiun", "Kota", "Terakhir Diupdate" };
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -80,10 +80,11 @@ public class StasiunManagementPanel extends JPanel {
         table.setFont(new Font("Inter", Font.PLAIN, 14));
         table.getTableHeader().setFont(new Font("Inter", Font.BOLD, 14));
         table.getTableHeader().setReorderingAllowed(false);
-        
+
         table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
             @Override
-            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
+                    boolean hasFocus, int row, int column) {
                 Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
                 if (c instanceof JLabel) {
                     ((JLabel) c).setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15));
@@ -114,7 +115,8 @@ public class StasiunManagementPanel extends JPanel {
                 Stasiun s = new Stasiun(id, kode, nama, kota);
                 showForm(s);
             } else {
-                JOptionPane.showMessageDialog(this, "Pilih data yang ingin diubah!", "Peringatan", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Pilih data yang ingin diubah!", "Peringatan",
+                        JOptionPane.WARNING_MESSAGE);
             }
         });
 
@@ -137,12 +139,14 @@ public class StasiunManagementPanel extends JPanel {
         tableModel.setRowCount(0);
         List<Stasiun> list = stasiunDAO.getAll();
         for (Stasiun s : list) {
-            tableModel.addRow(new Object[]{
-                s.getId(),
-                s.getKodeStasiun(),
-                s.getNamaStasiun(),
-                s.getKota(),
-                s.getCreatedAt()
+            if (s.getNamaStasiun().equalsIgnoreCase("Stasiun Gubeng"))
+                continue;
+            tableModel.addRow(new Object[] {
+                    s.getId(),
+                    s.getKodeStasiun(),
+                    s.getNamaStasiun(),
+                    s.getKota(),
+                    s.getCreatedAt()
             });
         }
     }
@@ -152,12 +156,14 @@ public class StasiunManagementPanel extends JPanel {
         tableModel.setRowCount(0);
         List<Stasiun> list = stasiunDAO.search(keyword);
         for (Stasiun s : list) {
-            tableModel.addRow(new Object[]{
-                s.getId(),
-                s.getKodeStasiun(),
-                s.getNamaStasiun(),
-                s.getKota(),
-                s.getCreatedAt()
+            if (s.getNamaStasiun().equalsIgnoreCase("Stasiun Gubeng"))
+                continue;
+            tableModel.addRow(new Object[] {
+                    s.getId(),
+                    s.getKodeStasiun(),
+                    s.getNamaStasiun(),
+                    s.getKota(),
+                    s.getCreatedAt()
             });
         }
     }
@@ -166,7 +172,8 @@ public class StasiunManagementPanel extends JPanel {
         int row = table.getSelectedRow();
         if (row != -1) {
             int id = (int) table.getValueAt(row, 0);
-            int confirm = JOptionPane.showConfirmDialog(this, "Yakin ingin menghapus stasiun ini?", "Konfirmasi Hapus", JOptionPane.YES_NO_OPTION);
+            int confirm = JOptionPane.showConfirmDialog(this, "Yakin ingin menghapus stasiun ini?", "Konfirmasi Hapus",
+                    JOptionPane.YES_NO_OPTION);
             if (confirm == JOptionPane.YES_OPTION) {
                 if (stasiunDAO.delete(id)) {
                     loadData();
@@ -174,13 +181,14 @@ public class StasiunManagementPanel extends JPanel {
                 }
             }
         } else {
-            JOptionPane.showMessageDialog(this, "Pilih data yang ingin dihapus!", "Peringatan", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Pilih data yang ingin dihapus!", "Peringatan",
+                    JOptionPane.WARNING_MESSAGE);
         }
     }
 
     private void showForm(Stasiun stasiun) {
-        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), 
-            stasiun == null ? "Tambah Stasiun" : "Edit Stasiun", true);
+        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this),
+                stasiun == null ? "Tambah Stasiun" : "Edit Stasiun", true);
         dialog.setLayout(new BorderLayout());
         dialog.setSize(400, 450);
         dialog.setLocationRelativeTo(this);
@@ -218,7 +226,8 @@ public class StasiunManagementPanel extends JPanel {
             }
 
             Stasiun s = new Stasiun();
-            if (stasiun != null) s.setId(stasiun.getId());
+            if (stasiun != null)
+                s.setId(stasiun.getId());
             s.setKodeStasiun(fKode.getText());
             s.setNamaStasiun(fNama.getText());
             s.setKota(fKota.getText());
