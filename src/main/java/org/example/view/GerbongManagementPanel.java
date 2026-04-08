@@ -69,7 +69,7 @@ public class GerbongManagementPanel extends JPanel {
         pnlHeaderGerbong.add(lblTitle, BorderLayout.WEST);
         pnlHeaderGerbong.add(btnAdd, BorderLayout.EAST);
 
-        String[] colsG = { "ID", "Nomor Gerbong", "Kereta", "Kelas", "Tanggal Dibuat" };
+        String[] colsG = { "No", "Nomor Gerbong", "Kereta", "Kelas", "Tanggal Dibuat", "ID" };
         modelGerbong = new DefaultTableModel(colsG, 0) {
             @Override
             public boolean isCellEditable(int r, int c) {
@@ -78,6 +78,9 @@ public class GerbongManagementPanel extends JPanel {
         };
         tableGerbong = new JTable(modelGerbong);
         tableGerbong.setRowHeight(40);
+        tableGerbong.getColumnModel().getColumn(5).setMinWidth(0);
+        tableGerbong.getColumnModel().getColumn(5).setMaxWidth(0);
+        tableGerbong.getColumnModel().getColumn(5).setWidth(0);
         tableGerbong.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting())
                 loadKursi();
@@ -98,7 +101,7 @@ public class GerbongManagementPanel extends JPanel {
         lblKursiTitle.setFont(new Font("Inter", Font.BOLD, 16));
         lblKursiTitle.setForeground(new Color(180, 180, 180));
 
-        String[] colsK = { "ID", "Baris", "Kode Kursi" };
+        String[] colsK = { "No", "Baris", "Kode Kursi", "ID" };
         modelKursi = new DefaultTableModel(colsK, 0) {
             @Override
             public boolean isCellEditable(int r, int c) {
@@ -107,6 +110,9 @@ public class GerbongManagementPanel extends JPanel {
         };
         tableKursi = new JTable(modelKursi);
         tableKursi.setRowHeight(35);
+        tableKursi.getColumnModel().getColumn(3).setMinWidth(0);
+        tableKursi.getColumnModel().getColumn(3).setMaxWidth(0);
+        tableKursi.getColumnModel().getColumn(3).setWidth(0);
 
         JScrollPane spK = new JScrollPane(tableKursi);
         spK.putClientProperty(FlatClientProperties.STYLE, "arc: 15; border: 0,0,0,0");
@@ -136,13 +142,15 @@ public class GerbongManagementPanel extends JPanel {
     private void loadGerbong() {
         modelGerbong.setRowCount(0);
         List<Gerbong> list = gerbongDAO.getAll();
+        int no = 1;
         for (Gerbong g : list) {
             modelGerbong.addRow(new Object[] {
-                    g.getId(),
+                    no++,
                     g.getNomorGerbong(),
                     g.getNamaKereta(),
                     g.getNamaKelas(),
-                    g.getCreatedAt()
+                    g.getCreatedAt(),
+                    g.getId()
             });
         }
     }
@@ -150,15 +158,16 @@ public class GerbongManagementPanel extends JPanel {
     private void loadKursi() {
         int row = tableGerbong.getSelectedRow();
         if (row != -1) {
-            int gId = (int) tableGerbong.getValueAt(row, 0);
-            String name = (String) tableGerbong.getValueAt(row, 1);
+            int gId = (int) tableGerbong.getModel().getValueAt(row, 5);
+            String name = (String) tableGerbong.getModel().getValueAt(row, 1);
             lblKursiTitle.setText("Kursi di Gerbong: " + name);
             lblKursiTitle.setForeground(Color.WHITE);
 
             modelKursi.setRowCount(0);
             List<Kursi> list = kursiDAO.getByGerbongId(gId);
+            int no = 1;
             for (Kursi k : list) {
-                modelKursi.addRow(new Object[] { k.getId(), k.getBarisKursi(), k.getKodeKursi() });
+                modelKursi.addRow(new Object[] { no++, k.getBarisKursi(), k.getKodeKursi(), k.getId() });
             }
         } else {
             lblKursiTitle.setText("Pilih Gerbong untuk melihat kursi");
@@ -169,7 +178,7 @@ public class GerbongManagementPanel extends JPanel {
     private void deleteGerbong() {
         int row = tableGerbong.getSelectedRow();
         if (row != -1) {
-            int id = (int) tableGerbong.getValueAt(row, 0);
+            int id = (int) tableGerbong.getModel().getValueAt(row, 5);
             int confirm = JOptionPane.showConfirmDialog(this, "Hapus gerbong ini beserta semua kursinya?", "Konfirmasi",
                     JOptionPane.YES_NO_OPTION);
             if (confirm == JOptionPane.YES_OPTION) {

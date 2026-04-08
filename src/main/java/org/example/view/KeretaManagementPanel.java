@@ -80,12 +80,15 @@ public class KeretaManagementPanel extends JPanel {
         header.add(actions, BorderLayout.EAST);
 
         // Table
-        String[] cols = {"ID", "Kode Kereta", "Nama Kereta", "Tanggal Dibuat", "Tanggal Diupdate"};
+        String[] cols = {"No", "Kode Kereta", "Nama Kereta", "Tanggal Dibuat", "Tanggal Diupdate", "ID"};
         keretaTableModel = new DefaultTableModel(cols, 0) {
             public boolean isCellEditable(int r, int c) { return false; }
         };
         keretaTable = new JTable(keretaTableModel);
         setupTable(keretaTable);
+        keretaTable.getColumnModel().getColumn(5).setMinWidth(0);
+        keretaTable.getColumnModel().getColumn(5).setMaxWidth(0);
+        keretaTable.getColumnModel().getColumn(5).setWidth(0);
 
         // Bottom Actions
         JPanel bottom = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
@@ -97,7 +100,7 @@ public class KeretaManagementPanel extends JPanel {
         btnEdit.addActionListener(e -> {
             int row = keretaTable.getSelectedRow();
             if (row != -1) {
-                int id = (int) keretaTable.getValueAt(row, 0);
+                int id = (int) keretaTable.getModel().getValueAt(row, 5);
                 Kereta k = keretaDAO.getAll().stream().filter(x -> x.getId() == id).findFirst().orElse(null);
                 showKeretaForm(k);
             }
@@ -153,12 +156,15 @@ public class KeretaManagementPanel extends JPanel {
         header.add(actions, BorderLayout.EAST);
 
         // Table
-        String[] cols = {"ID", "Nama Kelas", "Tanggal Dibuat", "Tanggal Diupdate"};
+        String[] cols = {"No", "Nama Kelas", "Tanggal Dibuat", "Tanggal Diupdate", "ID"};
         kelasTableModel = new DefaultTableModel(cols, 0) {
             public boolean isCellEditable(int r, int c) { return false; }
         };
         kelasTable = new JTable(kelasTableModel);
         setupTable(kelasTable);
+        kelasTable.getColumnModel().getColumn(4).setMinWidth(0);
+        kelasTable.getColumnModel().getColumn(4).setMaxWidth(0);
+        kelasTable.getColumnModel().getColumn(4).setWidth(0);
 
         // Bottom Actions
         JPanel bottom = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
@@ -170,7 +176,7 @@ public class KeretaManagementPanel extends JPanel {
         btnEdit.addActionListener(e -> {
             int row = kelasTable.getSelectedRow();
             if (row != -1) {
-                int id = (int) kelasTable.getValueAt(row, 0);
+                int id = (int) kelasTable.getModel().getValueAt(row, 4);
                 KelasKereta k = kelasKeretaDAO.getAll().stream().filter(x -> x.getId() == id).findFirst().orElse(null);
                 showKelasForm(k);
             }
@@ -204,22 +210,24 @@ public class KeretaManagementPanel extends JPanel {
     // --- LOGIC KERETA ---
     private void loadKeretaData() {
         keretaTableModel.setRowCount(0);
+        int[] no = {1};
         keretaDAO.getAll().forEach(k -> keretaTableModel.addRow(new Object[]{
-            k.getId(), k.getKodeKereta(), k.getNamaKereta(), k.getCreatedAt(), k.getUpdatedAt()
+            no[0]++, k.getKodeKereta(), k.getNamaKereta(), k.getCreatedAt(), k.getUpdatedAt(), k.getId()
         }));
     }
 
     private void searchKereta() {
         keretaTableModel.setRowCount(0);
+        int[] no = {1};
         keretaDAO.search(txtSearchKereta.getText()).forEach(k -> keretaTableModel.addRow(new Object[]{
-            k.getId(), k.getKodeKereta(), k.getNamaKereta(), k.getCreatedAt(), k.getUpdatedAt()
+            no[0]++, k.getKodeKereta(), k.getNamaKereta(), k.getCreatedAt(), k.getUpdatedAt(), k.getId()
         }));
     }
 
     private void deleteKereta() {
         int row = keretaTable.getSelectedRow();
         if (row != -1) {
-            int id = (int) keretaTable.getValueAt(row, 0);
+            int id = (int) keretaTable.getModel().getValueAt(row, 5);
             if (JOptionPane.showConfirmDialog(this, "Hapus data ini?", "Konfirmasi", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
                 if (keretaDAO.delete(id)) {
                     loadKeretaData();
@@ -261,22 +269,24 @@ public class KeretaManagementPanel extends JPanel {
     // --- LOGIC KELAS ---
     private void loadKelasData() {
         kelasTableModel.setRowCount(0);
+        int[] no = {1};
         kelasKeretaDAO.getAll().forEach(k -> kelasTableModel.addRow(new Object[]{
-            k.getId(), k.getNamaKelasKereta(), k.getCreatedAt(), k.getUpdatedAt()
+            no[0]++, k.getNamaKelasKereta(), k.getCreatedAt(), k.getUpdatedAt(), k.getId()
         }));
     }
 
     private void searchKelas() {
         kelasTableModel.setRowCount(0);
+        int[] no = {1};
         kelasKeretaDAO.search(txtSearchKelas.getText()).forEach(k -> kelasTableModel.addRow(new Object[]{
-            k.getId(), k.getNamaKelasKereta(), k.getCreatedAt(), k.getUpdatedAt()
+            no[0]++, k.getNamaKelasKereta(), k.getCreatedAt(), k.getUpdatedAt(), k.getId()
         }));
     }
 
     private void deleteKelas() {
         int row = kelasTable.getSelectedRow();
         if (row != -1) {
-            int id = (int) kelasTable.getValueAt(row, 0);
+            int id = (int) kelasTable.getModel().getValueAt(row, 4);
             if (JOptionPane.showConfirmDialog(this, "Hapus data ini?", "Konfirmasi", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
                 if (kelasKeretaDAO.delete(id)) {
                     loadKelasData();

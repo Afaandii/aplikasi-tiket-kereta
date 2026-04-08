@@ -101,7 +101,7 @@ public class LaporanAdminPanel extends JPanel {
 
         tablePanel.add(filterBar, BorderLayout.NORTH);
 
-        String[] cols = { "ID", "Kode TRX", "Booking", "Customer", "Kasir", "Tiket", "Total Bayar", "Metode", "Waktu" };
+        String[] cols = { "No", "Kode TRX", "Booking", "Customer", "Kasir", "Tiket", "Total Bayar", "Metode", "Waktu", "ID" };
         modelLaporan = new DefaultTableModel(cols, 0) {
             public boolean isCellEditable(int r, int c) {
                 return false;
@@ -110,6 +110,9 @@ public class LaporanAdminPanel extends JPanel {
         tblLaporan = new JTable(modelLaporan);
         setupTable(tblLaporan);
         tablePanel.add(new JScrollPane(tblLaporan), BorderLayout.CENTER);
+        tblLaporan.getColumnModel().getColumn(9).setMinWidth(0);
+        tblLaporan.getColumnModel().getColumn(9).setMaxWidth(0);
+        tblLaporan.getColumnModel().getColumn(9).setWidth(0);
 
         // Footer
         JPanel footer = new JPanel(new BorderLayout());
@@ -179,12 +182,13 @@ public class LaporanAdminPanel extends JPanel {
 
         long totalOmzet = 0;
         int totalTiket = 0;
+        int no = 1;
 
         for (Transaksi t : list) {
             modelLaporan.addRow(new Object[] {
-                    t.getId(), t.getKodeTransaksi(), t.getKodeBooking(), t.getNamaCustomer(),
+                    no++, t.getKodeTransaksi(), t.getKodeBooking(), t.getNamaCustomer(),
                     t.getUsername(), t.getJumlahTiket(), "Rp " + String.format("%, d", t.getTotalBayar()),
-                    t.getMetodePembayaran(), t.getCreatedAt()
+                    t.getMetodePembayaran(), t.getCreatedAt(), t.getId()
             });
             totalOmzet += t.getTotalBayar();
             totalTiket += t.getJumlahTiket();

@@ -67,7 +67,7 @@ public class StasiunManagementPanel extends JPanel {
         headerPanel.add(actionPanel, BorderLayout.EAST);
 
         // Table Section
-        String[] columns = { "ID", "Kode Stasiun", "Nama Stasiun", "Kota", "Terakhir Diupdate" };
+        String[] columns = { "No", "Kode Stasiun", "Nama Stasiun", "Kota", "Terakhir Diupdate", "ID" };
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -80,6 +80,9 @@ public class StasiunManagementPanel extends JPanel {
         table.setFont(new Font("Inter", Font.PLAIN, 14));
         table.getTableHeader().setFont(new Font("Inter", Font.BOLD, 14));
         table.getTableHeader().setReorderingAllowed(false);
+        table.getColumnModel().getColumn(5).setMinWidth(0);
+        table.getColumnModel().getColumn(5).setMaxWidth(0);
+        table.getColumnModel().getColumn(5).setWidth(0);
 
         table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
             @Override
@@ -108,8 +111,8 @@ public class StasiunManagementPanel extends JPanel {
         btnEdit.addActionListener(e -> {
             int row = table.getSelectedRow();
             if (row != -1) {
-                int id = (int) table.getValueAt(row, 0);
-                String kode = (String) table.getValueAt(row, 1);
+                int id = (int) table.getModel().getValueAt(row, 5);
+                String kode = (String) table.getModel().getValueAt(row, 1);
                 String nama = (String) table.getValueAt(row, 2);
                 String kota = (String) table.getValueAt(row, 3);
                 Stasiun s = new Stasiun(id, kode, nama, kota);
@@ -138,15 +141,17 @@ public class StasiunManagementPanel extends JPanel {
     private void loadData() {
         tableModel.setRowCount(0);
         List<Stasiun> list = stasiunDAO.getAll();
+        int no = 1;
         for (Stasiun s : list) {
             if (s.getNamaStasiun().equalsIgnoreCase("Stasiun Gubeng"))
                 continue;
             tableModel.addRow(new Object[] {
-                    s.getId(),
+                    no++,
                     s.getKodeStasiun(),
                     s.getNamaStasiun(),
                     s.getKota(),
-                    s.getCreatedAt()
+                    s.getCreatedAt(),
+                    s.getId()
             });
         }
     }
@@ -155,15 +160,17 @@ public class StasiunManagementPanel extends JPanel {
         String keyword = txtSearch.getText();
         tableModel.setRowCount(0);
         List<Stasiun> list = stasiunDAO.search(keyword);
+        int no = 1;
         for (Stasiun s : list) {
             if (s.getNamaStasiun().equalsIgnoreCase("Stasiun Gubeng"))
                 continue;
             tableModel.addRow(new Object[] {
-                    s.getId(),
+                    no++,
                     s.getKodeStasiun(),
                     s.getNamaStasiun(),
                     s.getKota(),
-                    s.getCreatedAt()
+                    s.getCreatedAt(),
+                    s.getId()
             });
         }
     }
@@ -171,7 +178,7 @@ public class StasiunManagementPanel extends JPanel {
     private void deleteData() {
         int row = table.getSelectedRow();
         if (row != -1) {
-            int id = (int) table.getValueAt(row, 0);
+            int id = (int) table.getModel().getValueAt(row, 5);
             int confirm = JOptionPane.showConfirmDialog(this, "Yakin ingin menghapus stasiun ini?", "Konfirmasi Hapus",
                     JOptionPane.YES_NO_OPTION);
             if (confirm == JOptionPane.YES_OPTION) {
