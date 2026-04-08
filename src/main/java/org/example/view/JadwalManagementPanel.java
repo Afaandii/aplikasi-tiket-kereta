@@ -94,7 +94,7 @@ public class JadwalManagementPanel extends JPanel {
         header.add(actions, BorderLayout.EAST);
 
         // Table
-        String[] cols = { "ID", "Kereta", "Asal", "Tujuan", "Berangkat", "Tiba", "Status" };
+        String[] cols = { "No", "Kereta", "Asal", "Tujuan", "Berangkat", "Tiba", "Status", "ID" };
         modelJadwal = new DefaultTableModel(cols, 0) {
             public boolean isCellEditable(int r, int c) {
                 return false;
@@ -102,6 +102,9 @@ public class JadwalManagementPanel extends JPanel {
         };
         tblJadwal = new JTable(modelJadwal);
         setupTable(tblJadwal);
+        tblJadwal.getColumnModel().getColumn(7).setMinWidth(0);
+        tblJadwal.getColumnModel().getColumn(7).setMaxWidth(0);
+        tblJadwal.getColumnModel().getColumn(7).setWidth(0);
         tblJadwal.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 loadHarga();
@@ -119,7 +122,7 @@ public class JadwalManagementPanel extends JPanel {
         btnEdit.addActionListener(e -> {
             int row = tblJadwal.getSelectedRow();
             if (row != -1) {
-                int id = (int) tblJadwal.getValueAt(row, 0);
+                int id = (int) tblJadwal.getModel().getValueAt(row, 7);
                 Jadwal j = jadwalDAO.getAll().stream().filter(x -> x.getId() == id).findFirst().orElse(null);
                 showJadwalForm(j);
             }
@@ -151,7 +154,7 @@ public class JadwalManagementPanel extends JPanel {
         lblHargaTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
 
         // Table
-        String[] cols = { "ID", "Kelas", "Harga Tiket", "Update Terakhir" };
+        String[] cols = { "No", "Kelas", "Harga Tiket", "Update Terakhir", "ID" };
         modelHarga = new DefaultTableModel(cols, 0) {
             public boolean isCellEditable(int r, int c) {
                 return false;
@@ -159,6 +162,9 @@ public class JadwalManagementPanel extends JPanel {
         };
         tblHarga = new JTable(modelHarga);
         setupTable(tblHarga);
+        tblHarga.getColumnModel().getColumn(4).setMinWidth(0);
+        tblHarga.getColumnModel().getColumn(4).setMaxWidth(0);
+        tblHarga.getColumnModel().getColumn(4).setWidth(0);
 
         JPanel bottom = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
         bottom.setOpaque(false);
@@ -194,7 +200,7 @@ public class JadwalManagementPanel extends JPanel {
         lblKursiTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
 
         // Table
-        String[] cols = { "ID", "Baris", "Kode Kursi", "Status" };
+        String[] cols = { "No", "Baris", "Kode Kursi", "Status", "ID" };
         modelKursi = new DefaultTableModel(cols, 0) {
             public boolean isCellEditable(int r, int c) {
                 return false;
@@ -202,6 +208,9 @@ public class JadwalManagementPanel extends JPanel {
         };
         tblKursi = new JTable(modelKursi);
         setupTable(tblKursi);
+        tblKursi.getColumnModel().getColumn(4).setMinWidth(0);
+        tblKursi.getColumnModel().getColumn(4).setMaxWidth(0);
+        tblKursi.getColumnModel().getColumn(4).setWidth(0);
 
         JPanel bottom = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
         bottom.setOpaque(false);
@@ -233,24 +242,26 @@ public class JadwalManagementPanel extends JPanel {
     // --- LOGIC JADWAL ---
     private void loadJadwal() {
         modelJadwal.setRowCount(0);
+        int[] no = {1};
         jadwalDAO.getAll().forEach(j -> modelJadwal.addRow(new Object[] {
-                j.getId(), j.getNamaKereta(), j.getNamaStasiunAsal(), j.getNamaStasiunTujuan(),
-                j.getWaktuBerangkat(), j.getWaktuTiba(), j.getStatus()
+                no[0]++, j.getNamaKereta(), j.getNamaStasiunAsal(), j.getNamaStasiunTujuan(),
+                j.getWaktuBerangkat(), j.getWaktuTiba(), j.getStatus(), j.getId()
         }));
     }
 
     private void searchJadwal() {
         modelJadwal.setRowCount(0);
+        int[] no = {1};
         jadwalDAO.search(txtSearchJadwal.getText()).forEach(j -> modelJadwal.addRow(new Object[] {
-                j.getId(), j.getNamaKereta(), j.getNamaStasiunAsal(), j.getNamaStasiunTujuan(),
-                j.getWaktuBerangkat(), j.getWaktuTiba(), j.getStatus()
+                no[0]++, j.getNamaKereta(), j.getNamaStasiunAsal(), j.getNamaStasiunTujuan(),
+                j.getWaktuBerangkat(), j.getWaktuTiba(), j.getStatus(), j.getId()
         }));
     }
 
     private void deleteJadwal() {
         int row = tblJadwal.getSelectedRow();
         if (row != -1) {
-            int id = (int) tblJadwal.getValueAt(row, 0);
+            int id = (int) tblJadwal.getModel().getValueAt(row, 7);
             if (JOptionPane.showConfirmDialog(this,
                     "Hapus jadwal ini? Semua harga dan status kursi terkait akan hilang.", "Konfirmasi",
                     JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
@@ -294,7 +305,11 @@ public class JadwalManagementPanel extends JPanel {
         textAsal.setDisabledTextColor(Color.GRAY);
 
         JComboBox<ComboItem> cbTujuan = new JComboBox<>();
-        allStasiun.forEach(s -> cbTujuan.addItem(new ComboItem(s.getId(), s.getNamaStasiun())));
+        allStasiun.forEach(s -> {
+            if (!s.getNamaStasiun().equalsIgnoreCase("Stasiun Gubeng")) {
+                cbTujuan.addItem(new ComboItem(s.getId(), s.getNamaStasiun()));
+            }
+        });
 
         if (j != null) {
             for (int i = 0; i < cbKereta.getItemCount(); i++) {
@@ -369,12 +384,13 @@ public class JadwalManagementPanel extends JPanel {
     private void loadHarga() {
         int row = tblJadwal.getSelectedRow();
         if (row != -1) {
-            int jId = (int) tblJadwal.getValueAt(row, 0);
-            String kereta = (String) tblJadwal.getValueAt(row, 1);
-            lblHargaTitle.setText("Harga Tiket Jadwal ID: " + jId + " (" + kereta + ")");
+            int jId = (int) tblJadwal.getModel().getValueAt(row, 7);
+            String kereta = (String) tblJadwal.getModel().getValueAt(row, 1);
+            lblHargaTitle.setText("Harga Tiket Jadwal (" + kereta + ")");
             modelHarga.setRowCount(0);
+            int[] no = {1};
             hargaDAO.getByJadwalId(jId).forEach(h -> modelHarga.addRow(new Object[] {
-                    h.getId(), h.getNamaKelas(), h.getHargaTiket(), h.getUpdatedAt()
+                    no[0]++, h.getNamaKelas(), h.getHargaTiket(), h.getUpdatedAt(), h.getId()
             }));
         } else {
             lblHargaTitle.setText("Pilih Jadwal untuk mengelola harga");
@@ -385,7 +401,7 @@ public class JadwalManagementPanel extends JPanel {
     private void deleteHarga() {
         int row = tblHarga.getSelectedRow();
         if (row != -1) {
-            int id = (int) tblHarga.getValueAt(row, 0);
+            int id = (int) tblHarga.getModel().getValueAt(row, 4);
             if (hargaDAO.delete(id)) {
                 loadHarga();
             }
@@ -396,7 +412,7 @@ public class JadwalManagementPanel extends JPanel {
         int rowJ = tblJadwal.getSelectedRow();
         if (rowJ == -1)
             return;
-        int jId = (int) tblJadwal.getValueAt(rowJ, 0);
+        int jId = (int) tblJadwal.getModel().getValueAt(rowJ, 7);
 
         JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Atur Harga", true);
         dialog.setSize(350, 300);
@@ -438,11 +454,12 @@ public class JadwalManagementPanel extends JPanel {
     private void loadKursi() {
         int row = tblJadwal.getSelectedRow();
         if (row != -1) {
-            int jId = (int) tblJadwal.getValueAt(row, 0);
-            lblKursiTitle.setText("Status Kursi Jadwal ID: " + jId);
+            int jId = (int) tblJadwal.getModel().getValueAt(row, 7);
+            lblKursiTitle.setText("Status Kursi Jadwal Terpilih");
             modelKursi.setRowCount(0);
+            int[] no = {1};
             kursiDAO.getByJadwalId(jId).forEach(k -> modelKursi.addRow(new Object[] {
-                    k.getId(), k.getBarisKursi(), k.getKodeKursi(), k.getStatus()
+                    no[0]++, k.getBarisKursi(), k.getKodeKursi(), k.getStatus(), k.getId()
             }));
         } else {
             lblKursiTitle.setText("Pilih Jadwal untuk melihat status kursi");
@@ -453,8 +470,8 @@ public class JadwalManagementPanel extends JPanel {
     private void updateKursiStatus() {
         int row = tblKursi.getSelectedRow();
         if (row != -1) {
-            int id = (int) tblKursi.getValueAt(row, 0);
-            String currentStatus = (String) tblKursi.getValueAt(row, 3);
+            int id = (int) tblKursi.getModel().getValueAt(row, 4);
+            String currentStatus = (String) tblKursi.getModel().getValueAt(row, 3);
             String newStatus = currentStatus.equalsIgnoreCase("tersedia") ? "dipesan" : "tersedia";
             if (kursiDAO.updateStatus(id, newStatus)) {
                 loadKursi();

@@ -72,7 +72,7 @@ public class UserManagementPanel extends JPanel {
         headerPanel.add(actionPanel, BorderLayout.EAST);
 
         // Table Section
-        String[] columns = {"ID", "Username", "Email", "Role", "Tanggal Dibuat"};
+        String[] columns = {"No", "Username", "Email", "Role", "Tanggal Dibuat", "ID"};
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -85,6 +85,9 @@ public class UserManagementPanel extends JPanel {
         table.setFont(new Font("Inter", Font.PLAIN, 14));
         table.getTableHeader().setFont(new Font("Inter", Font.BOLD, 14));
         table.getTableHeader().setReorderingAllowed(false);
+        table.getColumnModel().getColumn(5).setMinWidth(0);
+        table.getColumnModel().getColumn(5).setMaxWidth(0);
+        table.getColumnModel().getColumn(5).setWidth(0);
         table.setShowGrid(true);
         table.setGridColor(new Color(60, 60, 60));
         
@@ -114,7 +117,7 @@ public class UserManagementPanel extends JPanel {
         btnEdit.addActionListener(e -> {
             int row = table.getSelectedRow();
             if (row != -1) {
-                int id = (int) table.getValueAt(row, 0);
+                int id = (int) table.getModel().getValueAt(row, 5);
                 List<User> all = userDAO.getAll();
                 User selected = all.stream().filter(u -> u.getId() == id).findFirst().orElse(null);
                 showForm(selected);
@@ -141,14 +144,16 @@ public class UserManagementPanel extends JPanel {
     private void loadData() {
         tableModel.setRowCount(0);
         List<User> list = userDAO.getAll();
+        int no = 1;
         for (User u : list) {
             if (u.getRoleId() == 1) continue;
             tableModel.addRow(new Object[]{
-                u.getId(),
+                no++,
                 u.getUsername(),
                 u.getEmail(),
                 u.getRoleName(),
-                u.getCreatedAt()
+                u.getCreatedAt(),
+                u.getId()
             });
         }
     }
@@ -157,14 +162,16 @@ public class UserManagementPanel extends JPanel {
         String keyword = txtSearch.getText();
         tableModel.setRowCount(0);
         List<User> list = userDAO.search(keyword);
+        int no = 1;
         for (User u : list) {
             if (u.getRoleId() == 1) continue;
             tableModel.addRow(new Object[]{
-                u.getId(),
+                no++,
                 u.getUsername(),
                 u.getEmail(),
                 u.getRoleName(),
-                u.getCreatedAt()
+                u.getCreatedAt(),
+                u.getId()
             });
         }
     }
@@ -172,7 +179,7 @@ public class UserManagementPanel extends JPanel {
     private void deleteData() {
         int row = table.getSelectedRow();
         if (row != -1) {
-            int id = (int) table.getValueAt(row, 0);
+            int id = (int) table.getModel().getValueAt(row, 5);
             int confirm = JOptionPane.showConfirmDialog(this, "Yakin ingin menghapus user ini?", "Konfirmasi", JOptionPane.YES_NO_OPTION);
             if (confirm == JOptionPane.YES_OPTION) {
                 if (userDAO.delete(id)) {
