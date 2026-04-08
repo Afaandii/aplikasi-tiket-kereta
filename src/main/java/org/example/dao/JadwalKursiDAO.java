@@ -41,6 +41,42 @@ public class JadwalKursiDAO {
         return list;
     }
 
+    public List<JadwalKursi> getByJadwalAndGerbong(int jadwalId, int gerbongId) {
+        List<JadwalKursi> list = new ArrayList<>();
+        String sql = "SELECT jk.*, k.kode_kursi, k.baris_kursi, k.gerbong_id, g.nomor_gerbong " +
+                     "FROM jadwal_kursi jk " +
+                     "JOIN kursi k ON jk.kursi_id = k.id " +
+                     "JOIN gerbong g ON k.gerbong_id = g.id " +
+                     "WHERE jk.jadwal_id = ? AND k.gerbong_id = ? " +
+                     "ORDER BY k.baris_kursi ASC, k.kode_kursi ASC";
+
+        try (Connection conn = Database.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, jadwalId);
+            pstmt.setInt(2, gerbongId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    JadwalKursi jk = new JadwalKursi();
+                    jk.setId(rs.getInt("id"));
+                    jk.setJadwalId(rs.getInt("jadwal_id"));
+                    jk.setKursiId(rs.getInt("kursi_id"));
+                    jk.setStatus(rs.getString("status"));
+                    jk.setCreatedAt(rs.getTimestamp("created_at"));
+                    jk.setUpdatedAt(rs.getTimestamp("updated_at"));
+                    jk.setKodeKursi(rs.getString("kode_kursi"));
+                    jk.setBarisKursi(rs.getInt("baris_kursi"));
+                    jk.setGerbongId(rs.getInt("gerbong_id"));
+                    jk.setNomorGerbong(rs.getString("nomor_gerbong"));
+                    list.add(jk);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     public boolean updateStatus(int id, String status) {
         String sql = "UPDATE jadwal_kursi SET status = ?, updated_at = NOW() WHERE id = ?";
         try (Connection conn = Database.getConnection();

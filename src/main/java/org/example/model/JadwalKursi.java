@@ -13,6 +13,8 @@ public class JadwalKursi {
     // Display helpers
     private String kodeKursi;
     private int barisKursi;
+    private int gerbongId;
+    private String nomorGerbong;
 
     public JadwalKursi() {}
 
@@ -39,4 +41,10 @@ public class JadwalKursi {
 
     public int getBarisKursi() { return barisKursi; }
     public void setBarisKursi(int barisKursi) { this.barisKursi = barisKursi; }
+
+    public int getGerbongId() { return gerbongId; }
+    public void setGerbongId(int gerbongId) { this.gerbongId = gerbongId; }
+    
+    public String getNomorGerbong() { return nomorGerbong; }
+    public void setNomorGerbong(String nomorGerbong) { this.nomorGerbong = nomorGerbong; }
 }

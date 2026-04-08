@@ -39,6 +39,39 @@ public class GerbongDAO {
         return list;
     }
 
+    public List<Gerbong> getByKeretaId(int keretaId) {
+        List<Gerbong> list = new ArrayList<>();
+        String sql = "SELECT g.*, k.nama_kereta, kk.nama_kelas_kereta as nama_kelas " +
+                     "FROM gerbong g " +
+                     "JOIN kereta k ON g.kereta_id = k.id " +
+                     "JOIN kelas_kereta kk ON g.kelas_id = kk.id " +
+                     "WHERE g.kereta_id = ? " +
+                     "ORDER BY g.id ASC";
+
+        try (Connection conn = Database.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, keretaId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    Gerbong g = new Gerbong();
+                    g.setId(rs.getInt("id"));
+                    g.setKeretaId(rs.getInt("kereta_id"));
+                    g.setKelasId(rs.getInt("kelas_id"));
+                    g.setNomorGerbong(rs.getString("nomor_gerbong"));
+                    g.setCreatedAt(rs.getTimestamp("created_at"));
+                    g.setUpdatedAt(rs.getTimestamp("updated_at"));
+                    g.setNamaKereta(rs.getString("nama_kereta"));
+                    g.setNamaKelas(rs.getString("nama_kelas"));
+                    list.add(g);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     public int insert(Gerbong g) {
         String sql = "INSERT INTO gerbong (kereta_id, kelas_id, nomor_gerbong, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW())";
         try (Connection conn = Database.getConnection();
