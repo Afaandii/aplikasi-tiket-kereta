@@ -10,6 +10,7 @@ import java.util.List;
 public class JadwalKursiDAO {
 
     public List<JadwalKursi> getByJadwalId(int jadwalId) {
+        syncSeatsIfMissing(jadwalId);
         List<JadwalKursi> list = new ArrayList<>();
         String sql = "SELECT jk.*, k.kode_kursi, k.baris_kursi " +
                      "FROM jadwal_kursi jk " +
@@ -42,6 +43,7 @@ public class JadwalKursiDAO {
     }
 
     public List<JadwalKursi> getByJadwalAndGerbong(int jadwalId, int gerbongId) {
+        syncSeatsIfMissing(jadwalId);
         List<JadwalKursi> list = new ArrayList<>();
         String sql = "SELECT jk.*, k.kode_kursi, k.baris_kursi, k.gerbong_id, g.nomor_gerbong " +
                      "FROM jadwal_kursi jk " +
@@ -122,6 +124,27 @@ public class JadwalKursiDAO {
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
+        }
+    }
+
+    // Auto-sync missing seats for a specific schedule
+    private void syncSeatsIfMissing(int jadwalId) {
+        String sql = "INSERT INTO jadwal_kursi (jadwal_id, kursi_id, status, created_at, updated_at) " +
+                     "SELECT ?, k.id, 'tersedia', NOW(), NOW() " +
+                     "FROM kursi k " +
+                     "JOIN gerbong g ON k.gerbong_id = g.id " +
+                     "JOIN jadwal j ON g.kereta_id = j.kereta_id " +
+                     "WHERE j.id = ? AND NOT EXISTS (" +
+                     "    SELECT 1 FROM jadwal_kursi jk WHERE jk.jadwal_id = ? AND jk.kursi_id = k.id" +
+                     ")";
+        try (Connection conn = Database.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, jadwalId);
+            pstmt.setInt(2, jadwalId);
+            pstmt.setInt(3, jadwalId);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 }
