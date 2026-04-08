@@ -86,7 +86,7 @@ public class LaporanKasirPanel extends JPanel {
 
         tablePanel.add(filterBar, BorderLayout.NORTH);
 
-        String[] cols = { "Kode Transaksi", "Booking", "Customer", "Tiket", "Total Bayar", "Metode", "Waktu" };
+        String[] cols = { "No", "Kode Transaksi", "Booking", "Customer", "Tiket", "Total Bayar", "Metode", "Waktu" };
         modelLaporan = new DefaultTableModel(cols, 0) {
             public boolean isCellEditable(int r, int c) {
                 return false;
@@ -141,18 +141,24 @@ public class LaporanKasirPanel extends JPanel {
 
     private void loadLaporan() {
         modelLaporan.setRowCount(0);
-        String start = txtStartDate.getText();
-        String end = txtEndDate.getText();
+        String start = txtStartDate.getText() != null ? txtStartDate.getText().trim() : "";
+        String end = txtEndDate.getText() != null ? txtEndDate.getText().trim() : "";
+
+        // Pastikan hanya mem-parsing jika formatnya adalah YYYY-MM-DD
+        if (!start.matches("\\d{4}-\\d{2}-\\d{2}")) start = "";
+        if (!end.matches("\\d{4}-\\d{2}-\\d{2}")) end = "";
+
         String method = cbMetode.getSelectedItem().toString();
 
         List<Transaksi> list = transaksiDAO.getFilteredTransactions(currentUser.getId(), start, end, method);
 
         long totalRevenue = 0;
         int totalTiket = 0;
+        int no = 1;
 
         for (Transaksi t : list) {
             modelLaporan.addRow(new Object[] {
-                    t.getKodeTransaksi(), t.getKodeBooking(), t.getNamaCustomer(),
+                    no++, t.getKodeTransaksi(), t.getKodeBooking(), t.getNamaCustomer(),
                     t.getJumlahTiket(), "Rp " + String.format("%, d", t.getTotalBayar()),
                     t.getMetodePembayaran(), t.getCreatedAt()
             });
