@@ -9,6 +9,11 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import raven.datetime.DatePicker;
+import raven.datetime.TimePicker;
 
 public class JadwalManagementPanel extends JPanel {
     private final JadwalDAO jadwalDAO;
@@ -242,7 +247,7 @@ public class JadwalManagementPanel extends JPanel {
     // --- LOGIC JADWAL ---
     private void loadJadwal() {
         modelJadwal.setRowCount(0);
-        int[] no = {1};
+        int[] no = { 1 };
         jadwalDAO.getAll().forEach(j -> modelJadwal.addRow(new Object[] {
                 no[0]++, j.getNamaKereta(), j.getNamaStasiunAsal(), j.getNamaStasiunTujuan(),
                 j.getWaktuBerangkat(), j.getWaktuTiba(), j.getStatus(), j.getId()
@@ -251,7 +256,7 @@ public class JadwalManagementPanel extends JPanel {
 
     private void searchJadwal() {
         modelJadwal.setRowCount(0);
-        int[] no = {1};
+        int[] no = { 1 };
         jadwalDAO.search(txtSearchJadwal.getText()).forEach(j -> modelJadwal.addRow(new Object[] {
                 no[0]++, j.getNamaKereta(), j.getNamaStasiunAsal(), j.getNamaStasiunTujuan(),
                 j.getWaktuBerangkat(), j.getWaktuTiba(), j.getStatus(), j.getId()
@@ -299,7 +304,7 @@ public class JadwalManagementPanel extends JPanel {
             }
         }
         final int finalAsalId = (j != null) ? j.getStasiunAsalId() : gubengId;
-        
+
         JTextField textAsal = new JTextField(asalName);
         textAsal.setEnabled(false);
         textAsal.setDisabledTextColor(Color.GRAY);
@@ -326,9 +331,6 @@ public class JadwalManagementPanel extends JPanel {
             }
         }
 
-        JTextField fBerangkat = new JTextField(j != null ? j.getWaktuBerangkat().toString() : "2024-01-01 08:00:00");
-        JTextField fTiba = new JTextField(j != null ? j.getWaktuTiba().toString() : "2024-01-01 10:00:00");
-
         JComboBox<String> cbStatus = new JComboBox<>(new String[] { "Aktif", "Dibatalkan", "Selesai" });
         if (j != null)
             cbStatus.setSelectedItem(j.getStatus());
@@ -339,10 +341,69 @@ public class JadwalManagementPanel extends JPanel {
         p.add(textAsal);
         p.add(new JLabel("Stasiun Tujuan:"));
         p.add(cbTujuan);
-        p.add(new JLabel("Waktu Berangkat (YYYY-MM-DD HH:MM:SS):"));
-        p.add(fBerangkat);
-        p.add(new JLabel("Waktu Tiba (YYYY-MM-DD HH:MM:SS):"));
-        p.add(fTiba);
+
+        // --- BAGIAN WAKTU BERANGKAT ---
+        JPanel pBerangkat = new JPanel(new GridLayout(1, 2, 5, 0));
+        pBerangkat.setOpaque(false);
+
+        // Tanggal Berangkat
+        JFormattedTextField fBerangkatTgl = new JFormattedTextField();
+        DatePicker dpBerangkatTgl = new DatePicker();
+        dpBerangkatTgl.setEditor(fBerangkatTgl);
+        dpBerangkatTgl.setCloseAfterSelected(true);
+        dpBerangkatTgl.setDateFormat("yyyy-MM-dd");
+
+        // Jam Berangkat
+        JFormattedTextField fBerangkatJam = new JFormattedTextField();
+        TimePicker tpBerangkatJam = new TimePicker();
+        tpBerangkatJam.setEditor(fBerangkatJam);
+        tpBerangkatJam.set24HourView(true);
+
+        pBerangkat.add(fBerangkatTgl);
+        pBerangkat.add(fBerangkatJam);
+
+        // --- BAGIAN WAKTU TIBA ---
+        JPanel pTiba = new JPanel(new GridLayout(1, 2, 5, 0));
+        pTiba.setOpaque(false);
+
+        // Tanggal Tiba
+        JFormattedTextField fTibaTgl = new JFormattedTextField();
+        DatePicker dpTibaTgl = new DatePicker();
+        dpTibaTgl.setEditor(fTibaTgl);
+        dpTibaTgl.setCloseAfterSelected(true);
+        dpTibaTgl.setDateFormat("yyyy-MM-dd");
+
+        // Jam Tiba
+        JFormattedTextField fTibaJam = new JFormattedTextField();
+        TimePicker tpTibaJam = new TimePicker();
+        tpTibaJam.setEditor(fTibaJam);
+        tpTibaJam.set24HourView(true);
+
+        pTiba.add(fTibaTgl);
+        pTiba.add(fTibaJam);
+
+        if (j != null) {
+            LocalDateTime dtB = j.getWaktuBerangkat().toLocalDateTime();
+            dpBerangkatTgl.setSelectedDate(dtB.toLocalDate());
+            tpBerangkatJam.setSelectedTime(dtB.toLocalTime());
+
+            LocalDateTime dtT = j.getWaktuTiba().toLocalDateTime();
+            dpTibaTgl.setSelectedDate(dtT.toLocalDate());
+            tpTibaJam.setSelectedTime(dtT.toLocalTime());
+        } else {
+            LocalDateTime now = LocalDateTime.now();
+            dpBerangkatTgl.setSelectedDate(now.toLocalDate());
+            tpBerangkatJam.setSelectedTime(now.toLocalTime());
+
+            LocalDateTime future = now.plusHours(2);
+            dpTibaTgl.setSelectedDate(future.toLocalDate());
+            tpTibaJam.setSelectedTime(future.toLocalTime());
+        }
+
+        p.add(new JLabel("Waktu Berangkat:"));
+        p.add(pBerangkat);
+        p.add(new JLabel("Waktu Tiba:"));
+        p.add(pTiba);
         p.add(new JLabel("Status:"));
         p.add(cbStatus);
 
@@ -353,8 +414,20 @@ public class JadwalManagementPanel extends JPanel {
                 jadwal.setKeretaId(((ComboItem) cbKereta.getSelectedItem()).id);
                 jadwal.setStasiunAsalId(finalAsalId);
                 jadwal.setStasiunTujuanId(((ComboItem) cbTujuan.getSelectedItem()).id);
-                jadwal.setWaktuBerangkat(Timestamp.valueOf(fBerangkat.getText()));
-                jadwal.setWaktuTiba(Timestamp.valueOf(fTiba.getText()));
+
+                LocalDate dBerangkat = dpBerangkatTgl.getSelectedDate();
+                LocalTime tBerangkat = tpBerangkatJam.getSelectedTime();
+
+                LocalDate dTiba = dpTibaTgl.getSelectedDate();
+                LocalTime tTiba = tpTibaJam.getSelectedTime();
+
+                if (dBerangkat == null || tBerangkat == null || dTiba == null || tTiba == null) {
+                    JOptionPane.showMessageDialog(dialog, "Tanggal dan waktu harus diisi lengkap!");
+                    return;
+                }
+
+                jadwal.setWaktuBerangkat(Timestamp.valueOf(LocalDateTime.of(dBerangkat, tBerangkat)));
+                jadwal.setWaktuTiba(Timestamp.valueOf(LocalDateTime.of(dTiba, tTiba)));
                 jadwal.setStatus(cbStatus.getSelectedItem().toString());
 
                 if (j == null) {
@@ -371,7 +444,7 @@ public class JadwalManagementPanel extends JPanel {
                     }
                 }
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(dialog, "Format waktu salah! Gunakan: YYYY-MM-DD HH:MM:SS");
+                JOptionPane.showMessageDialog(dialog, "Terjadi kesalahan saat menyimpan data: " + ex.getMessage());
             }
         });
 
@@ -388,7 +461,7 @@ public class JadwalManagementPanel extends JPanel {
             String kereta = (String) tblJadwal.getModel().getValueAt(row, 1);
             lblHargaTitle.setText("Harga Tiket Jadwal (" + kereta + ")");
             modelHarga.setRowCount(0);
-            int[] no = {1};
+            int[] no = { 1 };
             hargaDAO.getByJadwalId(jId).forEach(h -> modelHarga.addRow(new Object[] {
                     no[0]++, h.getNamaKelas(), h.getHargaTiket(), h.getUpdatedAt(), h.getId()
             }));
@@ -457,7 +530,7 @@ public class JadwalManagementPanel extends JPanel {
             int jId = (int) tblJadwal.getModel().getValueAt(row, 7);
             lblKursiTitle.setText("Status Kursi Jadwal Terpilih");
             modelKursi.setRowCount(0);
-            int[] no = {1};
+            int[] no = { 1 };
             kursiDAO.getByJadwalId(jId).forEach(k -> modelKursi.addRow(new Object[] {
                     no[0]++, k.getBarisKursi(), k.getKodeKursi(), k.getStatus(), k.getId()
             }));
