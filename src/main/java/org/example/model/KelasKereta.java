@@ -7,6 +7,7 @@ public class KelasKereta {
     private String namaKelasKereta;
     private Timestamp createdAt;
     private Timestamp updatedAt;
+    private int stokGerbong;
 
     public KelasKereta() {
     }
@@ -48,6 +49,14 @@ public class KelasKereta {
 
     public void setUpdatedAt(Timestamp updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public int getStokGerbong() {
+        return stokGerbong;
+    }
+
+    public void setStokGerbong(int stokGerbong) {
+        this.stokGerbong = stokGerbong;
     }
 
     @Override

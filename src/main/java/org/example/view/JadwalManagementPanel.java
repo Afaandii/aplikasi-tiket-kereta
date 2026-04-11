@@ -396,14 +396,18 @@ public class JadwalManagementPanel extends JPanel {
             tpBerangkatJam.setSelectedTime(now.toLocalTime());
 
             LocalDateTime future = now.plusHours(2);
-            dpTibaTgl.setSelectedDate(future.toLocalDate());
             tpTibaJam.setSelectedTime(future.toLocalTime());
         }
 
-        p.add(new JLabel("Waktu Berangkat:"));
-        p.add(pBerangkat);
+        JSpinner spGerbong = new JSpinner(new SpinnerNumberModel(1, 1, 50, 1));
+        if (j != null) {
+            spGerbong.setValue(j.getJumlahGerbong());
+        }
+
         p.add(new JLabel("Waktu Tiba:"));
         p.add(pTiba);
+        p.add(new JLabel("Jumlah Gerbong:"));
+        p.add(spGerbong);
         p.add(new JLabel("Status:"));
         p.add(cbStatus);
 
@@ -429,6 +433,7 @@ public class JadwalManagementPanel extends JPanel {
                 jadwal.setWaktuBerangkat(Timestamp.valueOf(LocalDateTime.of(dBerangkat, tBerangkat)));
                 jadwal.setWaktuTiba(Timestamp.valueOf(LocalDateTime.of(dTiba, tTiba)));
                 jadwal.setStatus(cbStatus.getSelectedItem().toString());
+                jadwal.setJumlahGerbong((int) spGerbong.getValue());
 
                 if (j == null) {
                     int id = jadwalDAO.insert(jadwal);
