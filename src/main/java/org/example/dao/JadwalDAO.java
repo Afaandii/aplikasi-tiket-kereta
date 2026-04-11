@@ -117,9 +117,9 @@ public class JadwalDAO {
     }
 
     public int insert(Jadwal j) {
-        String sql = "INSERT INTO jadwal (kereta_id, stasiun_asal_id, stasiun_tujuan_id, waktu_berangkat, waktu_tiba, status, created_at, updated_at) "
+        String sql = "INSERT INTO jadwal (kereta_id, stasiun_asal_id, stasiun_tujuan_id, waktu_berangkat, waktu_tiba, status, jumlah_gerbong, created_at, updated_at) "
                 +
-                "VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())";
+                "VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
         try (Connection conn = Database.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
@@ -129,6 +129,7 @@ public class JadwalDAO {
             pstmt.setTimestamp(4, j.getWaktuBerangkat());
             pstmt.setTimestamp(5, j.getWaktuTiba());
             pstmt.setString(6, j.getStatus());
+            pstmt.setInt(7, j.getJumlahGerbong());
 
             int affectedRows = pstmt.executeUpdate();
             if (affectedRows > 0) {
@@ -144,7 +145,7 @@ public class JadwalDAO {
     }
 
     public boolean update(Jadwal j) {
-        String sql = "UPDATE jadwal SET kereta_id = ?, stasiun_asal_id = ?, stasiun_tujuan_id = ?, waktu_berangkat = ?, waktu_tiba = ?, status = ?, updated_at = NOW() WHERE id = ?";
+        String sql = "UPDATE jadwal SET kereta_id = ?, stasiun_asal_id = ?, stasiun_tujuan_id = ?, waktu_berangkat = ?, waktu_tiba = ?, status = ?, jumlah_gerbong = ?, updated_at = NOW() WHERE id = ?";
         try (Connection conn = Database.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
@@ -154,7 +155,8 @@ public class JadwalDAO {
             pstmt.setTimestamp(4, j.getWaktuBerangkat());
             pstmt.setTimestamp(5, j.getWaktuTiba());
             pstmt.setString(6, j.getStatus());
-            pstmt.setInt(7, j.getId());
+            pstmt.setInt(7, j.getJumlahGerbong());
+            pstmt.setInt(8, j.getId());
 
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -185,6 +187,7 @@ public class JadwalDAO {
         j.setWaktuBerangkat(rs.getTimestamp("waktu_berangkat"));
         j.setWaktuTiba(rs.getTimestamp("waktu_tiba"));
         j.setStatus(rs.getString("status"));
+        j.setJumlahGerbong(rs.getInt("jumlah_gerbong"));
         j.setCreatedAt(rs.getTimestamp("created_at"));
         j.setUpdatedAt(rs.getTimestamp("updated_at"));
         j.setNamaKereta(rs.getString("nama_kereta"));

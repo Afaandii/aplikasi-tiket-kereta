@@ -12,6 +12,7 @@ public class Jadwal {
     private String status;
     private Timestamp createdAt;
     private Timestamp updatedAt;
+    private int jumlahGerbong;
 
     // Display helpers (JOIN results)
     private String namaKereta;
@@ -46,6 +47,9 @@ public class Jadwal {
 
     public Timestamp getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(Timestamp updatedAt) { this.updatedAt = updatedAt; }
+
+    public int getJumlahGerbong() { return jumlahGerbong; }
+    public void setJumlahGerbong(int jumlahGerbong) { this.jumlahGerbong = jumlahGerbong; }
 
     public String getNamaKereta() { return namaKereta; }
     public void setNamaKereta(String namaKereta) { this.namaKereta = namaKereta; }

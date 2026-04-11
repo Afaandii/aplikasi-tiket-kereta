@@ -66,8 +66,19 @@ public class GerbongManagementPanel extends JPanel {
         btnAdd.putClientProperty(FlatClientProperties.STYLE, "arc: 15");
         btnAdd.addActionListener(e -> showForm(null));
 
+        JButton btnStok = new JButton("Stok Gerbong");
+        btnStok.setBackground(new Color(76, 175, 80));
+        btnStok.setForeground(Color.WHITE);
+        btnStok.putClientProperty(FlatClientProperties.STYLE, "arc: 15");
+        btnStok.addActionListener(e -> showStokDialog());
+
+        JPanel pnlButtons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        pnlButtons.setOpaque(false);
+        pnlButtons.add(btnStok);
+        pnlButtons.add(btnAdd);
+
         pnlHeaderGerbong.add(lblTitle, BorderLayout.WEST);
-        pnlHeaderGerbong.add(btnAdd, BorderLayout.EAST);
+        pnlHeaderGerbong.add(pnlButtons, BorderLayout.EAST);
 
         String[] colsG = { "No", "Nomor Gerbong", "Kereta", "Kelas", "Tanggal Dibuat", "ID" };
         modelGerbong = new DefaultTableModel(colsG, 0) {
@@ -254,15 +265,69 @@ public class GerbongManagementPanel extends JPanel {
         dialog.setVisible(true);
     }
 
+    private void showStokDialog() {
+        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Manajemen Stok Gerbong", true);
+        dialog.setLayout(new BorderLayout());
+        dialog.setSize(500, 400);
+        dialog.setLocationRelativeTo(this);
+
+        String[] cols = { "ID", "Nama Kelas", "Total Stok" };
+        DefaultTableModel model = new DefaultTableModel(cols, 0) {
+            @Override
+            public boolean isCellEditable(int r, int c) {
+                return c == 2; // Hanya stok yang bisa diedit
+            }
+        };
+
+        List<KelasKereta> list = kelasDAO.getAll();
+        for (KelasKereta k : list) {
+            model.addRow(new Object[] { k.getId(), k.getNamaKelasKereta(), k.getStokGerbong() });
+        }
+
+        JTable table = new JTable(model);
+        table.setRowHeight(35);
+
+        JButton btnSave = new JButton("Simpan Perubahan Stok");
+        btnSave.setBackground(new Color(51, 144, 255));
+        btnSave.setForeground(Color.WHITE);
+        btnSave.addActionListener(e -> {
+            try {
+                if (table.isEditing())
+                    table.getCellEditor().stopCellEditing();
+
+                for (int i = 0; i < model.getRowCount(); i++) {
+                    int id = (int) model.getValueAt(i, 0);
+                    String nama = (String) model.getValueAt(i, 1);
+                    int stok = Integer.parseInt(model.getValueAt(i, 2).toString());
+
+                    KelasKereta k = new KelasKereta();
+                    k.setId(id);
+                    k.setNamaKelasKereta(nama);
+                    k.setStokGerbong(stok);
+                    kelasDAO.update(k);
+                }
+                JOptionPane.showMessageDialog(dialog, "Stok berhasil diperbarui!");
+                dialog.dispose();
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(dialog, "Error: Pastikan input stok berupa angka.");
+            }
+        });
+
+        dialog.add(new JScrollPane(table), BorderLayout.CENTER);
+        dialog.add(btnSave, BorderLayout.SOUTH);
+        dialog.setVisible(true);
+    }
+
     private List<Kursi> generateSeats(int gerbongId, int capacity) {
         List<Kursi> list = new ArrayList<>();
-        char[] letters = {'A', 'B', 'C', 'D'};
+        char[] letters = { 'A', 'B', 'C', 'D' };
         int totalSeats = 0;
         int row = 1;
 
         while (totalSeats < capacity) {
             for (char letter : letters) {
-                if (totalSeats >= capacity) break;
+                if (totalSeats >= capacity)
+                    break;
                 Kursi k = new Kursi();
                 k.setGerbongId(gerbongId);
                 k.setBarisKursi(row);
