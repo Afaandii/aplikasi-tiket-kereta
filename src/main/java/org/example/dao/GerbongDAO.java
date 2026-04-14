@@ -27,6 +27,7 @@ public class GerbongDAO {
                 g.setKeretaId(rs.getInt("kereta_id"));
                 g.setKelasId(rs.getInt("kelas_id"));
                 g.setNomorGerbong(rs.getString("nomor_gerbong"));
+                g.setStokGerbong(rs.getInt("stok_gerbong"));
                 g.setCreatedAt(rs.getTimestamp("created_at"));
                 g.setUpdatedAt(rs.getTimestamp("updated_at"));
                 g.setNamaKereta(rs.getString("nama_kereta"));
@@ -59,6 +60,7 @@ public class GerbongDAO {
                     g.setKeretaId(rs.getInt("kereta_id"));
                     g.setKelasId(rs.getInt("kelas_id"));
                     g.setNomorGerbong(rs.getString("nomor_gerbong"));
+                    g.setStokGerbong(rs.getInt("stok_gerbong"));
                     g.setCreatedAt(rs.getTimestamp("created_at"));
                     g.setUpdatedAt(rs.getTimestamp("updated_at"));
                     g.setNamaKereta(rs.getString("nama_kereta"));
@@ -73,13 +75,14 @@ public class GerbongDAO {
     }
 
     public int insert(Gerbong g) {
-        String sql = "INSERT INTO gerbong (kereta_id, kelas_id, nomor_gerbong, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW())";
+        String sql = "INSERT INTO gerbong (kereta_id, kelas_id, nomor_gerbong, stok_gerbong, created_at, updated_at) VALUES (?, ?, ?, ?, NOW(), NOW())";
         try (Connection conn = Database.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             pstmt.setInt(1, g.getKeretaId());
             pstmt.setInt(2, g.getKelasId());
             pstmt.setString(3, g.getNomorGerbong());
+            pstmt.setInt(4, g.getStokGerbong());
             
             int affectedRows = pstmt.executeUpdate();
             if (affectedRows > 0) {
@@ -96,14 +99,15 @@ public class GerbongDAO {
     }
 
     public boolean update(Gerbong g) {
-        String sql = "UPDATE gerbong SET kereta_id = ?, kelas_id = ?, nomor_gerbong = ?, updated_at = NOW() WHERE id = ?";
+        String sql = "UPDATE gerbong SET kereta_id = ?, kelas_id = ?, nomor_gerbong = ?, stok_gerbong = ?, updated_at = NOW() WHERE id = ?";
         try (Connection conn = Database.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setInt(1, g.getKeretaId());
             pstmt.setInt(2, g.getKelasId());
             pstmt.setString(3, g.getNomorGerbong());
-            pstmt.setInt(4, g.getId());
+            pstmt.setInt(4, g.getStokGerbong());
+            pstmt.setInt(5, g.getId());
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -117,6 +121,21 @@ public class GerbongDAO {
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setInt(1, id);
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean reduceStock(int keretaId, int amount) {
+        String sql = "UPDATE gerbong SET stok_gerbong = stok_gerbong - ?, updated_at = NOW() WHERE kereta_id = ? AND stok_gerbong >= ? LIMIT 1";
+        try (Connection conn = Database.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, amount);
+            pstmt.setInt(2, keretaId);
+            pstmt.setInt(3, amount);
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();

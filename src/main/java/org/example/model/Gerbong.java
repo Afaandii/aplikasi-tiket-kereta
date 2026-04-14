@@ -9,6 +9,7 @@ public class Gerbong {
     private String nomorGerbong;
     private Timestamp createdAt;
     private Timestamp updatedAt;
+    private int stokGerbong;
 
     // Display helpers (JOIN results)
     private String namaKereta;
@@ -16,11 +17,12 @@ public class Gerbong {
 
     public Gerbong() {}
 
-    public Gerbong(int id, int keretaId, int kelasId, String nomorGerbong) {
+    public Gerbong(int id, int keretaId, int kelasId, String nomorGerbong, int stokGerbong) {
         this.id = id;
         this.keretaId = keretaId;
         this.kelasId = kelasId;
         this.nomorGerbong = nomorGerbong;
+        this.stokGerbong = stokGerbong;
     }
 
     public int getId() { return id; }
@@ -34,6 +36,9 @@ public class Gerbong {
 
     public String getNomorGerbong() { return nomorGerbong; }
     public void setNomorGerbong(String nomorGerbong) { this.nomorGerbong = nomorGerbong; }
+
+    public int getStokGerbong() { return stokGerbong; }
+    public void setStokGerbong(int stokGerbong) { this.stokGerbong = stokGerbong; }
 
     public Timestamp getCreatedAt() { return createdAt; }
     public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }

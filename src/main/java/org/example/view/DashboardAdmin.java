@@ -36,11 +36,12 @@ public class DashboardAdmin extends JFrame {
         mainContent.setBackground(new Color(30, 31, 34));
 
         // Add Panels
+        GerbongManagementPanel gerbongPanel = new GerbongManagementPanel();
         mainContent.add(createOverviewPanel(), "Overview");
         mainContent.add(new StasiunManagementPanel(), "Stasiun");
         mainContent.add(new KeretaManagementPanel(), "Kereta");
-        mainContent.add(new GerbongManagementPanel(), "Gerbong");
-        mainContent.add(new JadwalManagementPanel(), "Jadwal");
+        mainContent.add(gerbongPanel, "Gerbong");
+        mainContent.add(new JadwalManagementPanel(gerbongPanel), "Jadwal");
         mainContent.add(new UserManagementPanel(), "User");
         mainContent.add(new LaporanAdminPanel(), "Laporan");
 

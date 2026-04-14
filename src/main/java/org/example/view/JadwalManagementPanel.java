@@ -22,6 +22,8 @@ public class JadwalManagementPanel extends JPanel {
     private final KeretaDAO keretaDAO;
     private final StasiunDAO stasiunDAO;
     private final KelasKeretaDAO kelasDAO;
+    private final GerbongDAO gerbongDAO;
+    private final GerbongManagementPanel gerbongPanel;
 
     private JTable tblJadwal;
     private DefaultTableModel modelJadwal;
@@ -35,13 +37,15 @@ public class JadwalManagementPanel extends JPanel {
     private DefaultTableModel modelKursi;
     private JLabel lblKursiTitle;
 
-    public JadwalManagementPanel() {
+    public JadwalManagementPanel(GerbongManagementPanel gerbongPanel) {
         this.jadwalDAO = new JadwalDAO();
         this.hargaDAO = new JadwalHargaDAO();
         this.kursiDAO = new JadwalKursiDAO();
         this.keretaDAO = new KeretaDAO();
         this.stasiunDAO = new StasiunDAO();
         this.kelasDAO = new KelasKeretaDAO();
+        this.gerbongDAO = new GerbongDAO();
+        this.gerbongPanel = gerbongPanel;
 
         initComponents();
         loadJadwal();
@@ -439,6 +443,8 @@ public class JadwalManagementPanel extends JPanel {
                     int id = jadwalDAO.insert(jadwal);
                     if (id != -1) {
                         kursiDAO.initializeSeats(id, jadwal.getKeretaId());
+                        gerbongDAO.reduceStock(jadwal.getKeretaId(), jadwal.getJumlahGerbong());
+                        if (gerbongPanel != null) gerbongPanel.refreshData();
                         loadJadwal();
                         dialog.dispose();
                     }
